@@ -27,7 +27,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "m2",
-    name: "Joeling",
+    name: "Joel",
     role: "Visionary Leader",
     city: "Port Harcourt",
     line: "Culture is a crown - wear it boldly.",
@@ -83,4 +83,5 @@ export const MEMBERS: Member[] = [
     accent: "surf",
   },
 ];
+
 
