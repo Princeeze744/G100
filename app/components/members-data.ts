@@ -20,7 +20,7 @@ export const MEMBERS: Member[] = [
     id: "m1",
     name: "Quin Favour",
     role: "Visionary Leader",
-    city: "Lagos",
+    city: "Port Harcourt",
     line: "Grace in the walk, fire in the vision.",
     accent: "eye",
     photo: "/members/favour-1.jpg",
@@ -29,7 +29,7 @@ export const MEMBERS: Member[] = [
     id: "m2",
     name: "Joeling",
     role: "Visionary Leader",
-    city: "Lagos",
+    city: "Port Harcourt",
     line: "Culture is a crown - wear it boldly.",
     accent: "ember",
     photo: "/members/joeling.jpg",
@@ -83,3 +83,4 @@ export const MEMBERS: Member[] = [
     accent: "surf",
   },
 ];
+
