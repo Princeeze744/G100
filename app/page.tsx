@@ -165,7 +165,7 @@ export default function Home() {
           G100 is a family of visionary leaders. If you have the eye
           of the eagle, your place in the formation is waiting.
         </p>
-        <a href="#" className={joinBtn}>
+        <a href="https://wa.me/2348012881100?text=Hello%20G100%21%20I%20saw%20the%20website%20and%20I%20want%20to%20join%20the%20family.%20My%20name%20is%20" target="_blank" rel="noopener" className={joinBtn}>
           Request to Join
         </a>
       </Section>
@@ -176,6 +176,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
