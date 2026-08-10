@@ -9,9 +9,18 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://g100.vercel.app"),
   title: "G100 - A Group of Visionary Leaders",
   description:
-    "G100. Vision. Leadership. Unity. A brotherhood of visionary leaders.",
+    "At first glance, an eagle. On closer look, a hundred leaders. Vision. Leadership. Unity.",
+  openGraph: {
+    title: "G100 - A Group of Visionary Leaders",
+    description:
+      "At first glance, an eagle. On closer look, a hundred leaders.",
+    url: "https://g100.vercel.app",
+    siteName: "G100",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -26,3 +35,4 @@ export default function RootLayout({
     </html>
   );
 }
+
