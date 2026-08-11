@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const TARGET = new Date("2026-08-21T09:00:00+01:00").getTime();
 
@@ -72,9 +73,11 @@ export default function EketCountdown() {
           </div>
         ))}
       </div>
+
+      <Link href="/eket" className="mt-8 inline-block rounded-full border border-[var(--eye)]/40 px-6 py-2.5 text-sm text-[var(--eye)] transition hover:bg-[var(--eye)]/10">
+        See the full plan + RSVP
+      </Link>
     </motion.div>
   );
 }
-
-
 
