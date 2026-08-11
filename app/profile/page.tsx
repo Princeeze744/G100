@@ -294,7 +294,7 @@ export default function ProfilePage() {
                   className="mb-2 text-xs font-semibold uppercase tracking-[0.3em]"
                   style={{ color: accent }}
                 >
-                  {p.approved ? "One of the Hundred" : "Awaiting approval"}
+                  {p.approved ? "One of the Hundred" : "Awaiting admin approval"}
                 </p>
                 <h1 className="text-3xl font-bold sm:text-4xl">
                   {p.full_name}
@@ -544,3 +544,4 @@ export default function ProfilePage() {
     </main>
   );
 }
+
