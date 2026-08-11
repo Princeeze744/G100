@@ -13,7 +13,6 @@ import {
 
 const POOL = [
   "/members/favour-1.jpg",
-  "/members/joeling.jpg",
   "/members/favour-2.jpg",
   "/members/floating-4.jpg",
   "/members/floating-5.jpg",
@@ -21,6 +20,10 @@ const POOL = [
   "/members/floating-7.jpg",
   "/members/floating-8.jpg",
   "/members/floating-9.jpg",
+  "/members/floating-10.jpg",
+  "/members/floating-11.jpg",
+  "/members/floating-12.jpg",
+  "/members/floating-13.jpg",
 ];
 
 // Six stations - centers in % of the hero. Lines connect them.
@@ -261,4 +264,6 @@ export default function FloatingFaces() {
     </div>
   );
 }
+
+
 

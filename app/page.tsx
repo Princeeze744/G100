@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 import Section from "./components/Section";
 import Members from "./components/Members";
 import FloatingFaces from "./components/FloatingFaces";
 import EagleReveal from "./components/EagleReveal";
+import ParticleEagle from "./components/ParticleEagle";
 import Formation from "./components/Formation";
 import Atmosphere from "./components/Atmosphere";
 import EketCountdown from "./components/EketCountdown";
@@ -57,20 +57,7 @@ export default function Home() {
         className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden px-6"
       >
         <FloatingFaces />
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1.1, ease: heroEase }}
-        >
-          <Image
-            src="/eagle.svg"
-            alt="G100 - A Group of Visionary Leaders"
-            width={320}
-            height={200}
-            priority
-            className="h-auto w-64 invert sm:w-80"
-          />
-        </motion.div>
+        <ParticleEagle />
 
         <h1 className="flex flex-wrap justify-center gap-x-3 text-center text-3xl font-bold tracking-tight sm:text-5xl">
           {headline.map((word, i) => (
@@ -174,6 +161,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
