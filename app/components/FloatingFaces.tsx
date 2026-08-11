@@ -15,6 +15,8 @@ const POOL = [
   "/members/favour-2.jpg",
   "/members/floating-4.jpg",
   "/members/floating-5.jpg",
+  "/members/floating-6.jpg",
+  "/members/floating-7.jpg",
 ];
 
 // Four stages in the air - each cycles through the pool
@@ -200,3 +202,4 @@ export default function FloatingFaces() {
     </div>
   );
 }
+

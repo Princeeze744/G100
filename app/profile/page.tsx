@@ -3,30 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 
-const ACCENTS = {
+const ACCENTS: Record<string, string> = {
   eye: "#e8a33d",
   ember: "#e2603a",
   surf: "#3dbfb0",
 };
-
-type AccentKey = keyof typeof ACCENTS;
-
-const inputCls =
-  "w-full rounded-xl border border-white/15 bg-black/30 " +
-  "px-4 py-3 text-sm text-[var(--bone)] outline-none transition " +
-  "placeholder:text-neutral-500 focus:border-[var(--eye)]";
-
-const labelCls =
-  "mb-1.5 block text-xs font-semibold uppercase " +
-  "tracking-widest text-neutral-500";
-
-const saveCls =
-  "rounded-xl bg-[var(--bone)] px-8 py-3 text-sm font-semibold " +
-  "text-[var(--ink)] transition hover:bg-[var(--eye)] " +
-  "disabled:opacity-50";
 
 type Profile = {
   full_name: string;
@@ -40,15 +29,120 @@ type Profile = {
   linkedin: string;
   whatsapp: string;
   photo_url: string;
-  accent: AccentKey;
+  accent: string;
   approved: boolean;
 };
+
+const inputCls =
+  "w-full rounded-xl border border-white/15 bg-black/30 " +
+  "px-4 py-3 text-sm text-[var(--bone)] outline-none transition " +
+  "placeholder:text-neutral-500 focus:border-[var(--eye)]";
+
+const labelCls =
+  "mb-1.5 block text-xs font-semibold uppercase " +
+  "tracking-widest text-neutral-500";
+
+const primBtn =
+  "rounded-xl bg-[var(--bone)] px-8 py-3 text-sm font-semibold " +
+  "text-[var(--ink)] transition hover:bg-[var(--eye)] " +
+  "disabled:opacity-50";
+
+const ghostBtn =
+  "rounded-xl border border-white/20 px-6 py-3 text-sm " +
+  "text-neutral-300 transition hover:border-[var(--eye)] " +
+  "hover:text-[var(--eye)]";
+
+const pillCls =
+  "rounded-full border border-white/15 px-4 py-1.5 text-xs " +
+  "text-neutral-300 transition hover:border-current";
+
+const ease = [0.25, 0.1, 0.25, 1] as const;
+
+function TiltCard({
+  accent,
+  children,
+}: {
+  accent: string;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const mx = useMotionValue(0.5);
+  const my = useMotionValue(0.5);
+  const sx = useSpring(mx, { stiffness: 120, damping: 18 });
+  const sy = useSpring(my, { stiffness: 120, damping: 18 });
+  const rotateY = useTransform(sx, [0, 1], [-7, 7]);
+  const rotateX = useTransform(sy, [0, 1], [6, -6]);
+  const glowX = useTransform(sx, [0, 1], ["25%", "75%"]);
+  const glowY = useTransform(sy, [0, 1], ["25%", "75%"]);
+
+  function onMove(e: React.MouseEvent) {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set((e.clientX - r.left) / r.width);
+    my.set((e.clientY - r.top) / r.height);
+  }
+
+  function onLeave() {
+    mx.set(0.5);
+    my.set(0.5);
+  }
+
+  return (
+    <div style={{ perspective: 1100 }}>
+      <motion.div
+        ref={ref}
+        onMouseMove={onMove}
+        onMouseLeave={onLeave}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className="relative overflow-hidden rounded-3xl border border-white/10"
+      >
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-10 opacity-40"
+          style={{
+            background: useTransform(
+              [glowX, glowY],
+              ([x, y]) =>
+                "radial-gradient(circle at " +
+                x +
+                " " +
+                y +
+                ", " +
+                accent +
+                "33, transparent 55%)"
+            ),
+          }}
+        />
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function Reveal({
+  delay,
+  children,
+}: {
+  delay: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 26 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay, ease }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function ProfilePage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [p, setP] = useState<Profile | null>(null);
+  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -65,18 +159,21 @@ export default function ProfilePage() {
         .select("*")
         .eq("id", data.user.id)
         .single();
-      if (row) setP(row as Profile);
+      if (row) {
+        setP(row as Profile);
+        const empty = !row.role_title && !row.bio && !row.photo_url;
+        setEditing(empty);
+      }
     });
   }, [router]);
 
-  function set<K extends keyof Profile>(key: K, value: Profile[K]) {
-    setP((prev) => (prev ? { ...prev, [key]: value } : prev));
+  function set<K extends keyof Profile>(k: K, v: Profile[K]) {
+    setP((prev) => (prev ? { ...prev, [k]: v } : prev));
   }
 
   async function uploadPhoto(file: File) {
     if (!userId) return;
     setUploading(true);
-    setMsg("");
     const path = userId + "/avatar-" + Date.now() + ".jpg";
     const { error } = await supabase.storage
       .from("avatars")
@@ -113,7 +210,11 @@ export default function ProfilePage() {
       })
       .eq("id", userId);
     setBusy(false);
-    setMsg(error ? "Save failed: " + error.message : "Profile saved.");
+    if (error) {
+      setMsg("Save failed: " + error.message);
+      return;
+    }
+    setEditing(false);
   }
 
   async function logout() {
@@ -131,29 +232,154 @@ export default function ProfilePage() {
 
   const accent = ACCENTS[p.accent] || ACCENTS.eye;
 
+  const socials: { label: string; href: string }[] = [];
+  if (p.instagram) {
+    const u = p.instagram.replace(/^@/, "");
+    socials.push({ label: "Instagram", href: "https://instagram.com/" + u });
+  }
+  if (p.twitter) {
+    const u = p.twitter.replace(/^@/, "");
+    socials.push({ label: "X", href: "https://x.com/" + u });
+  }
+  if (p.linkedin) {
+    const u = p.linkedin.startsWith("http") ? p.linkedin : "https://" + p.linkedin;
+    socials.push({ label: "LinkedIn", href: u });
+  }
+  if (p.whatsapp) {
+    const u = p.whatsapp.replace(/\D/g, "");
+    socials.push({ label: "WhatsApp", href: "https://wa.me/" + u });
+  }
+
+  // ===================== VIEW MODE =====================
+  if (!editing) {
+    return (
+      <main className="relative mx-auto max-w-2xl px-6 pb-20 pt-28">
+        <motion.div
+          aria-hidden
+          animate={{ opacity: [0.08, 0.16, 0.08] }}
+          transition={{ duration: 7, repeat: Infinity }}
+          className="pointer-events-none fixed left-1/2 top-1/3 -z-10 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, " + accent + ", transparent 65%)",
+          }}
+        />
+
+        <Reveal delay={0.1}>
+          <TiltCard accent={accent}>
+            <div className="relative aspect-[4/5] w-full sm:aspect-[16/10]">
+              {p.photo_url ? (
+                <Image
+                  src={p.photo_url}
+                  alt={p.full_name}
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 100vw, 672px"
+                  className="object-cover object-top"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-neutral-600">
+                  No photo yet
+                </div>
+              )}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(13,11,9,0.95) 0%, rgba(13,11,9,0.35) 45%, transparent 70%)",
+                }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-7">
+                <p
+                  className="mb-2 text-xs font-semibold uppercase tracking-[0.3em]"
+                  style={{ color: accent }}
+                >
+                  {p.approved ? "One of the Hundred" : "Awaiting approval"}
+                </p>
+                <h1 className="text-3xl font-bold sm:text-4xl">
+                  {p.full_name}
+                </h1>
+                <p className="mt-1 text-sm text-neutral-300">
+                  {p.role_title}
+                  {p.city ? " - " + p.city : ""}
+                </p>
+              </div>
+            </div>
+          </TiltCard>
+        </Reveal>
+
+        {p.bio && (
+          <Reveal delay={0.35}>
+            <p
+              className="mt-10 border-l-2 pl-5 text-lg leading-relaxed text-neutral-200"
+              style={{ borderColor: accent }}
+            >
+              {p.bio}
+            </p>
+          </Reveal>
+        )}
+
+        {p.services && (
+          <Reveal delay={0.5}>
+            <div className="mt-9">
+              <p className={labelCls}>Services</p>
+              <p className="text-neutral-300">{p.services}</p>
+            </div>
+          </Reveal>
+        )}
+
+        {p.education && (
+          <Reveal delay={0.6}>
+            <div className="mt-7">
+              <p className={labelCls}>Education</p>
+              <p className="text-neutral-300">{p.education}</p>
+            </div>
+          </Reveal>
+        )}
+
+        {socials.length > 0 && (
+          <Reveal delay={0.7}>
+            <div className="mt-9 flex flex-wrap gap-2">
+              {socials.map((s) => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener" className={pillCls} style={{ color: accent }}>
+                  {s.label}
+                </a>
+              ))}
+            </div>
+          </Reveal>
+        )}
+
+        <Reveal delay={0.85}>
+          <div className="mt-12 flex flex-wrap items-center gap-3">
+            <button className={primBtn} onClick={() => setEditing(true)}>
+              Edit profile
+            </button>
+            <button className={ghostBtn} onClick={logout}>
+              Log out
+            </button>
+          </div>
+        </Reveal>
+      </main>
+    );
+  }
+
+  // ===================== EDIT MODE =====================
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-6 pb-16 pt-28">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 0.7, ease }}
       >
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Your Profile</h1>
+          <h1 className="text-3xl font-bold">Edit Profile</h1>
           <button
-            onClick={logout}
+            onClick={() => setEditing(false)}
             className="text-sm text-neutral-400 transition hover:text-[var(--eye)]"
           >
-            Log out
+            Cancel
           </button>
         </div>
-
-        {!p.approved && (
-          <div className="mb-8 rounded-2xl border border-[var(--eye)]/30 bg-[var(--eye)]/10 p-4 text-sm text-neutral-200">
-            Your profile is awaiting admin approval. Complete it now -
-            the moment you are approved, you appear in The 100.
-          </div>
-        )}
 
         <div className="mb-10 flex items-center gap-6">
           <button
@@ -175,18 +401,13 @@ export default function ProfilePage() {
               </span>
             )}
           </button>
-          <div>
-            <p className="text-sm text-neutral-300">
-              Your portrait - the face in the formation.
-            </p>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="mt-2 text-sm font-semibold"
-              style={{ color: accent }}
-            >
-              {uploading ? "Uploading..." : "Upload photo"}
-            </button>
-          </div>
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="text-sm font-semibold"
+            style={{ color: accent }}
+          >
+            {uploading ? "Uploading..." : "Change photo"}
+          </button>
           <input
             ref={fileRef}
             type="file"
@@ -214,7 +435,6 @@ export default function ProfilePage() {
               <label className={labelCls}>Role / Profession</label>
               <input
                 className={inputCls}
-                placeholder="Software Engineer"
                 value={p.role_title}
                 onChange={(e) => set("role_title", e.target.value)}
               />
@@ -223,7 +443,6 @@ export default function ProfilePage() {
               <label className={labelCls}>City</label>
               <input
                 className={inputCls}
-                placeholder="Port Harcourt"
                 value={p.city}
                 onChange={(e) => set("city", e.target.value)}
               />
@@ -234,19 +453,15 @@ export default function ProfilePage() {
             <label className={labelCls}>Bio - your story</label>
             <textarea
               className={inputCls + " min-h-28 resize-y"}
-              placeholder="Who are you? What drives you?"
               value={p.bio}
               onChange={(e) => set("bio", e.target.value)}
             />
           </div>
 
           <div>
-            <label className={labelCls}>
-              Services - what you offer
-            </label>
+            <label className={labelCls}>Services</label>
             <textarea
               className={inputCls + " min-h-20 resize-y"}
-              placeholder="Web development, brand design, consulting..."
               value={p.services}
               onChange={(e) => set("services", e.target.value)}
             />
@@ -256,7 +471,6 @@ export default function ProfilePage() {
             <label className={labelCls}>Education</label>
             <textarea
               className={inputCls + " min-h-20 resize-y"}
-              placeholder="B.Sc Computer Science, UNIPORT..."
               value={p.education}
               onChange={(e) => set("education", e.target.value)}
             />
@@ -267,7 +481,6 @@ export default function ProfilePage() {
               <label className={labelCls}>Instagram</label>
               <input
                 className={inputCls}
-                placeholder="@username"
                 value={p.instagram}
                 onChange={(e) => set("instagram", e.target.value)}
               />
@@ -276,7 +489,6 @@ export default function ProfilePage() {
               <label className={labelCls}>X / Twitter</label>
               <input
                 className={inputCls}
-                placeholder="@username"
                 value={p.twitter}
                 onChange={(e) => set("twitter", e.target.value)}
               />
@@ -285,7 +497,6 @@ export default function ProfilePage() {
               <label className={labelCls}>LinkedIn</label>
               <input
                 className={inputCls}
-                placeholder="linkedin.com/in/you"
                 value={p.linkedin}
                 onChange={(e) => set("linkedin", e.target.value)}
               />
@@ -294,7 +505,6 @@ export default function ProfilePage() {
               <label className={labelCls}>WhatsApp</label>
               <input
                 className={inputCls}
-                placeholder="2348012345678"
                 value={p.whatsapp}
                 onChange={(e) => set("whatsapp", e.target.value)}
               />
@@ -304,17 +514,15 @@ export default function ProfilePage() {
           <div>
             <label className={labelCls}>Your accent color</label>
             <div className="flex gap-3">
-              {(Object.keys(ACCENTS) as AccentKey[]).map((k) => (
+              {Object.keys(ACCENTS).map((k) => (
                 <button
                   key={k}
                   onClick={() => set("accent", k)}
-                  className="h-9 w-9 rounded-full transition"
+                  className="h-9 w-9 rounded-full"
                   style={{
                     background: ACCENTS[k],
                     outline:
-                      p.accent === k
-                        ? "2px solid var(--bone)"
-                        : "none",
+                      p.accent === k ? "2px solid var(--bone)" : "none",
                     outlineOffset: 3,
                   }}
                   aria-label={k}
@@ -324,20 +532,11 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-4 flex items-center gap-4">
-            <button className={saveCls} onClick={save} disabled={busy}>
+            <button className={primBtn} onClick={save} disabled={busy}>
               {busy ? "Saving..." : "Save profile"}
             </button>
             {msg && (
-              <p
-                className="text-sm"
-                style={{
-                  color: msg.includes("failed")
-                    ? "var(--ember)"
-                    : "var(--surf)",
-                }}
-              >
-                {msg}
-              </p>
+              <p className="text-sm text-[var(--ember)]">{msg}</p>
             )}
           </div>
         </div>

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import Navbar from "./components/Navbar";
 import Section from "./components/Section";
 import Members from "./components/Members";
 import FloatingFaces from "./components/FloatingFaces";
@@ -52,7 +51,6 @@ const memberCls =
 export default function Home() {
   return (
     <>
-      <Navbar />
       <Atmosphere />
       <WhatsAppFloat />
 
@@ -178,6 +176,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
