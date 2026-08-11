@@ -9,7 +9,7 @@ import AuthShell from "../components/AuthShell";
 const inputCls =
   "w-full rounded-xl border border-white/15 bg-black/30 " +
   "px-4 py-3.5 text-sm text-[var(--bone)] outline-none transition " +
-  "placeholder:text-neutral-500 focus:border-[var(--eye)] " +
+  "placeholder:text-neutral-400 focus:border-[var(--eye)] " +
   "focus:shadow-[0_0_20px_rgba(232,163,61,0.15)]";
 
 const btnCls =
@@ -75,4 +75,5 @@ export default function LoginPage() {
     </AuthShell>
   );
 }
+
 

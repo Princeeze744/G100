@@ -69,7 +69,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{
                 duration: 0.6,
-                delay: 0.5 + i * 0.12,
+                delay: 0.25 + i * 0.1,
                 ease: heroEase,
               }}
             >
@@ -81,7 +81,7 @@ export default function Home() {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.4 }}
+          transition={{ duration: 1, delay: 1.0 }}
           className="max-w-md text-center text-sm text-neutral-400 sm:text-base"
         >
           Vision. Leadership. Unity. - 100 leaders, one eagle.
@@ -91,7 +91,7 @@ export default function Home() {
           href="#reveal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.9 }}
+          transition={{ duration: 1, delay: 1.4 }}
           className={ctaBtn}
         >
           Discover the Vision
@@ -157,12 +157,14 @@ export default function Home() {
         </a>
       </Section>
 
-      <footer className="border-t border-white/10 py-10 text-center text-xs text-neutral-600">
+      <footer className="border-t border-white/10 py-10 text-center text-xs text-neutral-400">
         G100 - A Group of Visionary Leaders. All rights reserved.
       </footer>
     </>
   );
 }
+
+
 
 
 

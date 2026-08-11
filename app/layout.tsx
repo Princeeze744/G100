@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 
 const spaceGrotesk = Space_Grotesk({
+  display: "swap",
   subsets: ["latin"],
   variable: "--font-grotesk",
 });
@@ -39,4 +40,6 @@ export default function RootLayout({
     </html>
   );
 }
+
+
 

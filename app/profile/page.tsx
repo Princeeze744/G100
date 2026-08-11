@@ -36,11 +36,11 @@ type Profile = {
 const inputCls =
   "w-full rounded-xl border border-white/15 bg-black/30 " +
   "px-4 py-3 text-sm text-[var(--bone)] outline-none transition " +
-  "placeholder:text-neutral-500 focus:border-[var(--eye)]";
+  "placeholder:text-neutral-400 focus:border-[var(--eye)]";
 
 const labelCls =
   "mb-1.5 block text-xs font-semibold uppercase " +
-  "tracking-widest text-neutral-500";
+  "tracking-widest text-neutral-400";
 
 const primBtn =
   "rounded-xl bg-[var(--bone)] px-8 py-3 text-sm font-semibold " +
@@ -225,7 +225,7 @@ export default function ProfilePage() {
   if (!p) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-neutral-500">Opening the nest...</p>
+        <p className="text-neutral-400">Opening the nest...</p>
       </main>
     );
   }
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                   className="object-cover object-top"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-neutral-600">
+                <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-neutral-400">
                   No photo yet
                 </div>
               )}
@@ -396,7 +396,7 @@ export default function ProfilePage() {
                 className="object-cover"
               />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-xs text-neutral-500">
+              <span className="flex h-full w-full items-center justify-center text-xs text-neutral-400">
                 {uploading ? "..." : "Add photo"}
               </span>
             )}
@@ -544,5 +544,6 @@ export default function ProfilePage() {
     </main>
   );
 }
+
 
 

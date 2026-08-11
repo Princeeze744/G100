@@ -269,7 +269,7 @@ export default function Members() {
 
                 {open.services && (
                   <div className="mt-6">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                       Services
                     </p>
                     <p className="text-sm text-neutral-300">
@@ -280,7 +280,7 @@ export default function Members() {
 
                 {open.education && (
                   <div className="mt-5">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                       Education
                     </p>
                     <p className="text-sm text-neutral-300">
@@ -316,6 +316,7 @@ export default function Members() {
     </>
   );
 }
+
 
 
 

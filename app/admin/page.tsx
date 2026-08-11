@@ -82,7 +82,7 @@ export default function AdminPage() {
   if (!ready) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-neutral-500">Checking wings...</p>
+        <p className="text-neutral-400">Checking wings...</p>
       </main>
     );
   }
@@ -112,7 +112,7 @@ export default function AdminPage() {
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-white/[0.05] text-xs text-neutral-500">
+            <div className="flex h-full w-full items-center justify-center bg-white/[0.05] text-xs text-neutral-400">
               {(r.full_name || "?").slice(0, 2).toUpperCase()}
             </div>
           )}
@@ -159,7 +159,7 @@ export default function AdminPage() {
       </h2>
       <div className="mb-12 flex flex-col gap-3">
         {pending.length === 0 && (
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-400">
             No one at the gate. The nest is calm.
           </p>
         )}
@@ -179,4 +179,5 @@ export default function AdminPage() {
     </main>
   );
 }
+
 
