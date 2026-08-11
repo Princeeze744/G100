@@ -21,7 +21,7 @@ export default function Section({
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">
           {kicker}
         </p>
         <h2 className="mb-10 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -32,3 +32,4 @@ export default function Section({
     </section>
   );
 }
+

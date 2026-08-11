@@ -305,7 +305,7 @@ export default function Members() {
                   </div>
                 )}
 
-                <p className="mt-8 text-xs uppercase tracking-[0.3em] text-neutral-500">
+                <p className="mt-8 text-xs uppercase tracking-[0.3em] text-neutral-400">
                   G100 - One of the Hundred
                 </p>
               </div>
@@ -316,6 +316,7 @@ export default function Members() {
     </>
   );
 }
+
 
 
 

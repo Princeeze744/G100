@@ -3,12 +3,13 @@
 import { useEffect, useRef } from "react";
 import { EAGLE_POINTS, EAGLE_ASPECT } from "./eagle-points";
 
-// The G100 eagle, assembled live from points of light.
-// Scattered individuals become one form - the story, rendered.
+// v2 - batched rendering, zero per-frame allocation, idle start.
 
-const BONE = [245, 242, 236];
-const EYE = [232, 163, 61];
-const EMBER = [226, 96, 58];
+const COLORS = [
+  "rgb(245,242,236)",
+  "rgb(232,163,61)",
+  "rgb(226,96,58)",
+];
 
 type P = {
   tx: number;
@@ -18,7 +19,7 @@ type P = {
   vx: number;
   vy: number;
   size: number;
-  color: number[];
+  ci: number;
   alpha: number;
   tw: number;
   twSpeed: number;
@@ -40,17 +41,15 @@ export default function ParticleEagle() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
     const mobile = window.innerWidth < 640;
-
-    // Device tier: phones fly a lighter flock
     const step = mobile ? 2 : 1;
     const dprCap = mobile ? 1.5 : 2;
 
     let W = 0;
     let H = 0;
-    let dpr = 1;
     let raf = 0;
-    let running = true;
-    let started = performance.now();
+    let running = false;
+    let disposed = false;
+    let started = 0;
 
     const pointer = { x: -9999, y: -9999, active: false };
 
@@ -58,8 +57,7 @@ export default function ParticleEagle() {
     for (let i = 0; i < EAGLE_POINTS.length; i += step) {
       const [nx, ny] = EAGLE_POINTS[i];
       const roll = Math.random();
-      const color =
-        roll < 0.06 ? EYE : roll < 0.09 ? EMBER : BONE;
+      const ci = roll < 0.06 ? 1 : roll < 0.09 ? 2 : 0;
       particles.push({
         tx: nx,
         ty: ny,
@@ -67,19 +65,23 @@ export default function ParticleEagle() {
         y: Math.random() * 2 - 0.5,
         vx: 0,
         vy: 0,
-        size: 0.7 + Math.random() * 1.4,
-        color,
+        size: 0.8 + Math.random() * 1.3,
+        ci,
         alpha: 0.35 + Math.random() * 0.65,
-        tw: Math.random() * Math.PI * 2,
+        tw: Math.random() * 6.28,
         twSpeed: 0.4 + Math.random() * 1.2,
-        delay: Math.random() * 1400,
+        delay: Math.random() * 1200,
       });
     }
+
+    // batch particles by color once
+    const groups: P[][] = [[], [], []];
+    for (const p of particles) groups[p.ci].push(p);
 
     function resize() {
       if (!wrap || !canvas || !ctx) return;
       const r = wrap.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
       W = r.width;
       H = r.height;
       canvas.width = Math.round(W * dpr);
@@ -92,73 +94,76 @@ export default function ParticleEagle() {
     function drawStatic() {
       if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
-      for (const p of particles) {
-        const [r, g, b] = p.color;
-        ctx.fillStyle =
-          "rgba(" + r + "," + g + "," + b + "," + p.alpha + ")";
-        ctx.beginPath();
-        ctx.arc(p.tx * W, p.ty * H, p.size, 0, Math.PI * 2);
-        ctx.fill();
+      for (let g = 0; g < 3; g++) {
+        ctx.fillStyle = COLORS[g];
+        for (const p of groups[g]) {
+          ctx.globalAlpha = p.alpha;
+          const s = p.size;
+          ctx.fillRect(p.tx * W - s, p.ty * H - s, s * 2, s * 2);
+        }
       }
+      ctx.globalAlpha = 1;
     }
 
     function frame(now: number) {
-      if (!ctx || !running) return;
+      if (!ctx || !running || disposed) return;
       const t = now - started;
       ctx.clearRect(0, 0, W, H);
 
       const R = mobile ? 70 : 110;
+      const pa = pointer.active;
+      const px0 = pointer.x;
+      const py0 = pointer.y;
 
-      for (const p of particles) {
-        if (t < p.delay) continue;
+      for (let g = 0; g < 3; g++) {
+        ctx.fillStyle = COLORS[g];
+        const arr = groups[g];
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          if (t < p.delay) continue;
 
-        const txp = p.tx * W;
-        const typ = p.ty * H;
-        let px = p.x * W;
-        let py = p.y * H;
+          const txp = p.tx * W;
+          const typ = p.ty * H;
+          let x = p.x * W;
+          let y = p.y * H;
 
-        // spring home
-        let ax = (txp - px) * 0.012;
-        let ay = (typ - py) * 0.012;
+          let ax = (txp - x) * 0.012;
+          let ay = (typ - y) * 0.012;
 
-        // cursor wind
-        if (pointer.active) {
-          const dx = px - pointer.x;
-          const dy = py - pointer.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < R && d > 0.01) {
-            const f = ((R - d) / R) * 2.2;
-            ax += (dx / d) * f;
-            ay += (dy / d) * f;
+          if (pa) {
+            const dx = x - px0;
+            const dy = y - py0;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < R * R && d2 > 0.01) {
+              const d = Math.sqrt(d2);
+              const f = ((R - d) / R) * 2.2;
+              ax += (dx / d) * f;
+              ay += (dy / d) * f;
+            }
           }
+
+          p.vx = (p.vx + ax) * 0.88;
+          p.vy = (p.vy + ay) * 0.88;
+          x += p.vx;
+          y += p.vy;
+          p.x = x / W;
+          p.y = y / H;
+
+          p.tw += p.twSpeed * 0.016;
+          ctx.globalAlpha =
+            p.alpha * (0.75 + Math.sin(p.tw) * 0.25);
+          const s = p.size;
+          ctx.fillRect(x - s, y - s, s * 2, s * 2);
         }
-
-        p.vx = (p.vx + ax) * 0.88;
-        p.vy = (p.vy + ay) * 0.88;
-        px += p.vx;
-        py += p.vy;
-        p.x = px / W;
-        p.y = py / H;
-
-        p.tw += p.twSpeed * 0.016;
-        const twinkle = 0.75 + Math.sin(p.tw) * 0.25;
-
-        const [r, g, b] = p.color;
-        ctx.fillStyle =
-          "rgba(" +
-          r +
-          "," +
-          g +
-          "," +
-          b +
-          "," +
-          p.alpha * twinkle +
-          ")";
-        ctx.beginPath();
-        ctx.arc(px, py, p.size, 0, Math.PI * 2);
-        ctx.fill();
       }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(frame);
+    }
 
+    function begin() {
+      if (disposed || running) return;
+      running = true;
+      started = performance.now();
       raf = requestAnimationFrame(frame);
     }
 
@@ -172,7 +177,6 @@ export default function ParticleEagle() {
     const onMouse = (e: MouseEvent) => toLocal(e.clientX, e.clientY);
     const onLeave = () => {
       pointer.active = false;
-      pointer.x = -9999;
     };
     const onTouch = (e: TouchEvent) => {
       if (e.touches[0])
@@ -184,57 +188,63 @@ export default function ParticleEagle() {
 
     if (reduced) {
       drawStatic();
-    } else {
-      window.addEventListener("mousemove", onMouse);
-      window.addEventListener("mouseout", onLeave);
-      window.addEventListener("touchmove", onTouch, { passive: true });
-      window.addEventListener("touchend", onLeave);
-
-      // pause off-screen and when tab hidden
-      const io = new IntersectionObserver(
-        (entries) => {
-          const vis = entries[0]?.isIntersecting;
-          if (vis && !running) {
-            running = true;
-            raf = requestAnimationFrame(frame);
-          } else if (!vis) {
-            running = false;
-            cancelAnimationFrame(raf);
-          }
-        },
-        { threshold: 0.05 }
-      );
-      io.observe(wrap);
-
-      const onVis = () => {
-        if (document.hidden) {
-          running = false;
-          cancelAnimationFrame(raf);
-        } else {
-          running = true;
-          started = performance.now() - 5000;
-          raf = requestAnimationFrame(frame);
-        }
-      };
-      document.addEventListener("visibilitychange", onVis);
-
-      raf = requestAnimationFrame(frame);
-
       return () => {
-        running = false;
-        cancelAnimationFrame(raf);
+        disposed = true;
         window.removeEventListener("resize", resize);
-        window.removeEventListener("mousemove", onMouse);
-        window.removeEventListener("mouseout", onLeave);
-        window.removeEventListener("touchmove", onTouch);
-        window.removeEventListener("touchend", onLeave);
-        document.removeEventListener("visibilitychange", onVis);
-        io.disconnect();
       };
     }
 
+    window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("mouseout", onLeave);
+    window.addEventListener("touchmove", onTouch, { passive: true });
+    window.addEventListener("touchend", onLeave);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const vis = !!entries[0]?.isIntersecting;
+        if (!vis) {
+          running = false;
+          cancelAnimationFrame(raf);
+        } else if (started > 0 && !running) {
+          running = true;
+          raf = requestAnimationFrame(frame);
+        }
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(wrap);
+
+    const onVis = () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(raf);
+      } else if (started > 0) {
+        running = true;
+        raf = requestAnimationFrame(frame);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    // Let the page paint first - assemble when the browser breathes
+    const idler =
+      "requestIdleCallback" in window
+        ? (window as any).requestIdleCallback(begin, { timeout: 900 })
+        : setTimeout(begin, 500);
+
     return () => {
+      disposed = true;
+      running = false;
+      cancelAnimationFrame(raf);
+      if ("requestIdleCallback" in window)
+        (window as any).cancelIdleCallback(idler);
+      else clearTimeout(idler as any);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("mouseout", onLeave);
+      window.removeEventListener("touchmove", onTouch);
+      window.removeEventListener("touchend", onLeave);
+      document.removeEventListener("visibilitychange", onVis);
+      io.disconnect();
     };
   }, []);
 
@@ -250,3 +260,4 @@ export default function ParticleEagle() {
     </div>
   );
 }
+

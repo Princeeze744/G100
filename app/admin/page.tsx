@@ -168,7 +168,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-neutral-500">
+      <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">
         The 100 ({approved.length})
       </h2>
       <div className="flex flex-col gap-3">
@@ -179,3 +179,4 @@ export default function AdminPage() {
     </main>
   );
 }
+

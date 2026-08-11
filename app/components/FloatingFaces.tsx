@@ -144,9 +144,9 @@ function Slot({
           <AnimatePresence mode="sync">
             <motion.div
               key={idx}
-              initial={{ opacity: 0, scale: 1.25, filter: "blur(10px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.85, filter: "blur(8px)" }}
+              initial={{ opacity: 0, scale: 1.25 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
               transition={{
                 duration: 1.6,
                 ease: [0.25, 0.1, 0.25, 1],
@@ -264,6 +264,8 @@ export default function FloatingFaces() {
     </div>
   );
 }
+
+
 
 
 
