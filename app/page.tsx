@@ -1,14 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import LazyMount from "./components/LazyMount";
 import Section from "./components/Section";
-import Members from "./components/Members";
+const Members = dynamic(() => import("./components/Members"));
 import FloatingFaces from "./components/FloatingFaces";
-import EagleReveal from "./components/EagleReveal";
+const EagleReveal = dynamic(() => import("./components/EagleReveal"));
 import ParticleEagle from "./components/ParticleEagle";
-import Formation from "./components/Formation";
+const Formation = dynamic(() => import("./components/Formation"));
 import Atmosphere from "./components/Atmosphere";
-import EketCountdown from "./components/EketCountdown";
+const EketCountdown = dynamic(() => import("./components/EketCountdown"));
 
 const headline = ["A", "Group", "of", "Visionary", "Leaders"];
 
@@ -124,16 +126,16 @@ export default function Home() {
         </div>
       </Section>
 
-      <EagleReveal />
+      <LazyMount minH="300vh"><EagleReveal /></LazyMount>
 
-      <Formation />
+      <LazyMount minH="220vh"><Formation /></LazyMount>
 
       <Section id="members" kicker="The Family" title="The 100">
         <p className="mb-12 max-w-2xl text-neutral-400">
           One hundred visionary leaders - each one a feather in the same
           wing. Tap a member to meet them.
         </p>
-        <Members />
+        <LazyMount minH="60vh"><Members /></LazyMount>
       </Section>
 
       <Section id="life" kicker="The Life" title="We Lead. We Laugh. We Live.">
@@ -142,7 +144,7 @@ export default function Home() {
           show love, we play hard, and we show up for each other. The
           eagle flies, but it also lands on the beach.
         </p>
-        <EketCountdown />
+        <LazyMount minH="20rem"><EketCountdown /></LazyMount>
       </Section>
 
       <Section id="join" kicker="Take Flight" title="Fly With Us">
@@ -161,6 +163,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
