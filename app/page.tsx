@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Section from "./components/Section";
 import Members from "./components/Members";
 import FloatingFaces from "./components/FloatingFaces";
-import WhatsAppFloat from "./components/WhatsAppFloat";
 import EagleReveal from "./components/EagleReveal";
 import Formation from "./components/Formation";
 import Atmosphere from "./components/Atmosphere";
@@ -52,7 +51,6 @@ export default function Home() {
   return (
     <>
       <Atmosphere />
-      <WhatsAppFloat />
 
       <main
         id="home"
@@ -176,6 +174,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 

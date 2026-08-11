@@ -21,10 +21,19 @@ const linkCls = "transition-colors hover:text-[var(--eye)]";
 export default function Navbar() {
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setLoggedIn(!!data.user);
+      if (data.user) {
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", data.user.id)
+          .single();
+        setIsAdmin(!!me?.is_admin);
+      }
     });
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_e, session) => setLoggedIn(!!session)
@@ -76,6 +85,11 @@ export default function Navbar() {
           )
         )}
 
+        {isAdmin && (
+          <Link href="/admin" className={linkCls}>
+            Gate
+          </Link>
+        )}
         {loggedIn ? (
           <Link
             href="/profile"
@@ -96,3 +110,4 @@ export default function Navbar() {
     </motion.nav>
   );
 }
+
