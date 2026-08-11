@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import Section from "./components/Section";
 import Members from "./components/Members";
 import FloatingFaces from "./components/FloatingFaces";
+import WhatsAppFloat from "./components/WhatsAppFloat";
 import EagleReveal from "./components/EagleReveal";
 import Formation from "./components/Formation";
 import Atmosphere from "./components/Atmosphere";
@@ -53,6 +54,7 @@ export default function Home() {
     <>
       <Navbar />
       <Atmosphere />
+      <WhatsAppFloat />
 
       <main
         id="home"
@@ -165,8 +167,8 @@ export default function Home() {
           G100 is a family of visionary leaders. If you have the eye
           of the eagle, your place in the formation is waiting.
         </p>
-        <a href="https://wa.me/2348012881100?text=Hello%20G100%21%20I%20saw%20the%20website%20and%20I%20want%20to%20join%20the%20family.%20My%20name%20is%20" target="_blank" rel="noopener" className={joinBtn}>
-          Request to Join
+        <a href="/join" className={joinBtn}>
+          Create Your Profile
         </a>
       </Section>
 
@@ -176,6 +178,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 

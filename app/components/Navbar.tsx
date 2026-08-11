@@ -7,7 +7,7 @@ const links = [
   { label: "Home", href: "#home" },
   { label: "The Idea", href: "#idea" },
   { label: "Members", href: "#members" },
-  { label: "Join", href: "#join" },
+  { label: "Join", href: "/join" },
 ];
 
 const navCls =
@@ -42,4 +42,5 @@ export default function Navbar() {
     </motion.nav>
   );
 }
+
 
