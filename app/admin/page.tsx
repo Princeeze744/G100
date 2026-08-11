@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
+import GalleryManager from "../components/GalleryManager";
 
 type Row = {
   id: string;
@@ -176,8 +177,11 @@ export default function AdminPage() {
           <MemberRow key={r.id} r={r} />
         ))}
       </div>
+
+      <GalleryManager />
     </main>
   );
 }
+
 
 

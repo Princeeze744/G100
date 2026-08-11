@@ -10,6 +10,7 @@ const EagleReveal = dynamic(() => import("./components/EagleReveal"));
 import ParticleEagle from "./components/ParticleEagle";
 const Formation = dynamic(() => import("./components/Formation"));
 import Atmosphere from "./components/Atmosphere";
+const Gallery = dynamic(() => import("./components/Gallery"));
 const EketCountdown = dynamic(() => import("./components/EketCountdown"));
 
 const headline = ["A", "Group", "of", "Visionary", "Leaders"];
@@ -147,6 +148,13 @@ export default function Home() {
         <LazyMount minH="20rem"><EketCountdown /></LazyMount>
       </Section>
 
+      <Section id="gallery" kicker="The Memories" title="Life in Formation">
+        <p className="mb-10 max-w-2xl text-neutral-400">
+          The moments that make us - captured in flight.
+        </p>
+        <LazyMount minH="40vh"><Gallery /></LazyMount>
+      </Section>
+
       <Section id="join" kicker="Take Flight" title="Fly With Us">
         <p className="mb-8 max-w-xl text-neutral-400">
           G100 is a family of visionary leaders. If you have the eye
@@ -163,6 +171,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
