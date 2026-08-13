@@ -11,6 +11,7 @@ import ParticleEagle from "./components/ParticleEagle";
 const Formation = dynamic(() => import("./components/Formation"));
 import Atmosphere from "./components/Atmosphere";
 const Gallery = dynamic(() => import("./components/Gallery"));
+const Origin = dynamic(() => import("./components/Origin"));
 const EketCountdown = dynamic(() => import("./components/EketCountdown"));
 
 const headline = ["A", "Group", "of", "Visionary", "Leaders"];
@@ -99,33 +100,7 @@ export default function Home() {
         </motion.a>
       </main>
 
-      <Section
-        id="idea"
-        kicker="The Idea"
-        title="One Eagle. One Hundred Leaders."
-      >
-        <p className="mb-12 max-w-2xl text-neutral-400">
-          At first glance, you see an eagle - vision and leadership. On
-          closer look, the word G100 becomes clear. The letters are not
-          placed next to each other. They become the shape. That is who
-          we are: individuals who flow together as one unified form.
-        </p>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {pillars.map((p, i) => (
-            <motion.div
-              key={p.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.15 }}
-              className={cardCls}
-            >
-              <h3 className="mb-2 text-lg font-semibold">{p.title}</h3>
-              <p className="text-sm text-neutral-400">{p.text}</p>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
+      <Origin />
 
       <LazyMount minH="300vh"><EagleReveal /></LazyMount>
 
@@ -171,6 +146,8 @@ export default function Home() {
     </>
   );
 }
+
+
 
 
 
