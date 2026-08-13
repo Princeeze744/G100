@@ -3,6 +3,8 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "./components/SmoothScroll";
 import Navbar from "./components/Navbar";
+import InstallPrompt from "./components/InstallPrompt";
+import SWRegister from "./components/SWRegister";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 
 const spaceGrotesk = Space_Grotesk({
@@ -34,12 +36,15 @@ export default function RootLayout({
       <body className={`${spaceGrotesk.variable} font-sans`}>
         <SmoothScroll />
         <Navbar />
+        <InstallPrompt />
+        <SWRegister />
         <WhatsAppFloat />
         {children}
       </body>
     </html>
   );
 }
+
 
 
 
