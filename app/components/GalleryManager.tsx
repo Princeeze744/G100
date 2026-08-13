@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { supabase } from "../../lib/supabaseClient";
+import { shrinkImage } from "../../lib/shrinkImage";
 
 type Shot = {
   id: string;
@@ -45,9 +46,10 @@ export default function GalleryManager() {
     setBusy(true);
     for (const file of Array.from(files)) {
       const path = Date.now() + "-" + file.name.replace(/\s/g, "_");
+      const small = await shrinkImage(file, 1400);
       const { error } = await supabase.storage
         .from("gallery")
-        .upload(path, file);
+        .upload(path, small, { contentType: "image/jpeg" });
       if (!error) {
         const { data } = supabase.storage
           .from("gallery")
@@ -153,3 +155,5 @@ export default function GalleryManager() {
     </div>
   );
 }
+
+

@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
+import { shrinkImage } from "../../lib/shrinkImage";
 
 const ACCENTS: Record<string, string> = {
   eye: "#e8a33d",
@@ -175,9 +176,10 @@ export default function ProfilePage() {
     if (!userId) return;
     setUploading(true);
     const path = userId + "/avatar-" + Date.now() + ".jpg";
+    const small = await shrinkImage(file);
     const { error } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true });
+      .upload(path, small, { upsert: true, contentType: "image/jpeg" });
     if (error) {
       setMsg("Photo upload failed: " + error.message);
       setUploading(false);
@@ -544,6 +546,8 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+
 
 
 
