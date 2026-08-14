@@ -19,7 +19,17 @@ export default function ThreadsPage() {
   }, [uid]);
 
   if (!ready) {
-    return <main className="flex min-h-screen items-center justify-center"><p className="text-neutral-400">Loading Threads...</p></main>;
+    return (
+      <main className="mx-auto max-w-xl px-4 pb-24 pt-24 sm:px-6">
+        <h1 className="text-2xl font-bold">Threads</h1>
+        <p className="mb-8 text-sm text-neutral-400">The voice of G100.</p>
+        <div className="flex flex-col gap-4">
+          <div className="h-32 animate-pulse rounded-3xl bg-white/5" />
+          <div className="h-56 animate-pulse rounded-3xl bg-white/5" />
+          <div className="h-40 animate-pulse rounded-3xl bg-white/5" />
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -49,3 +59,4 @@ export default function ThreadsPage() {
     </main>
   );
 }
+

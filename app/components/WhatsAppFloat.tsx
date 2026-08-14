@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export default function WhatsAppFloat() {
+  const pathname = usePathname();
+  if (pathname !== "/") return null;
   return (
     <motion.a
       href="https://wa.me/2348012881100"
@@ -29,6 +32,7 @@ export default function WhatsAppFloat() {
     </motion.a>
   );
 }
+
 
 
 

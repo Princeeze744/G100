@@ -125,6 +125,8 @@ export function PostCard({
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quoteText, setQuoteText] = useState("");
   const hot = p.likes + p.reposts >= 4;
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(p.body);
 
   async function like() {
     if (!uid || !approved) return;
@@ -156,6 +158,12 @@ export function PostCard({
     const text = (p.body || "A post from G100").slice(0, 100);
     if (navigator.share) { try { await navigator.share({ title: "G100", text, url }); } catch {} }
     else { try { await navigator.clipboard.writeText(url); } catch {} window.open("https://wa.me/?text=" + encodeURIComponent(text + " - " + url), "_blank"); }
+  }
+
+  async function saveEdit() {
+    await supabase.from("posts").update({ body: editText.trim() }).eq("id", p.id);
+    setEditing(false);
+    onChanged();
   }
 
   async function del() {
@@ -194,12 +202,18 @@ export function PostCard({
             </p>
           </div>
           {p.author_id === uid && !embedded && (
-            <button onClick={del} className="text-xs text-neutral-500 transition hover:text-[var(--ember)]">Delete</button>
+            <div className="flex gap-3"><button onClick={() => setEditing((v) => !v)} className="text-xs text-neutral-500 transition hover:text-[var(--eye)]">Edit</button><button onClick={del} className="text-xs text-neutral-500 transition hover:text-[var(--ember)]">Delete</button></div>
           )}
         </div>
 
         {/* body */}
-        {(p.repost_of && !p.is_quote ? orig?.body : p.body) && (
+        {editing && (
+          <div className="mt-3 flex gap-2">
+            <input value={editText} onChange={(e) => setEditText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveEdit()} className="flex-1 rounded-full border border-white/15 bg-black/30 px-4 py-2 text-sm text-[var(--bone)] outline-none focus:border-[var(--eye)]" />
+            <button onClick={saveEdit} className="rounded-full px-4 py-2 text-xs font-semibold text-[var(--ink)]" style={{ background: a }}>Save</button>
+          </div>
+        )}
+        {!editing && {(p.repost_of && !p.is_quote ? orig?.body : p.body) && (
           <Link href={"/threads/" + p.id} className="mt-3 block whitespace-pre-wrap text-[0.95rem] leading-relaxed text-neutral-100">
             {p.repost_of && !p.is_quote ? orig?.body : p.body}
           </Link>
@@ -258,3 +272,4 @@ export function PostCard({
     </>
   );
 }
+

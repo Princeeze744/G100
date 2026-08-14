@@ -129,3 +129,23 @@ live feeds). Approach: phase it, keep the calm/restraint law, never let
 features bloat the award showpiece. Build member-only social features
 BEHIND the login so the public landing stays cinematic and clean.
 
+
+## THREADS PLATFORM (built - replaces /feed)
+/threads - public timeline. /threads/[id] - post detail, all comments open,
+fixed reply bar. /member/[id] - member profile + their personal post timeline.
+Shared: lib/social.ts (types, ACCENTS, timeAgo), lib/usePosts.ts (data hook,
+realtime), app/components/SocialUI.tsx (Avatar, PostImages, Lightbox, PostCard),
+app/components/Composer.tsx.
+Features: post (text + up to 4 images), like, comment, comment-like,
+reply-to-comment (1 level nesting), repost, quote-post, share, edit own post,
+delete own post/comment. Counts visible on cards. Realtime everywhere.
+Public can VIEW all; only approved members can act.
+DB adds: posts.repost_of, posts.is_quote, post_comments.parent_id,
+comment_likes table. All RLS public-read, member-write.
+UX: skeleton loaders (no blank "loading" screens). WhatsApp float = homepage only.
+
+## COMPETITION STATUS (day 5)
+G100: 120 pts | 2nd: 100 | 3rd: 80 | 4th: 60. Leading throughout.
+Judges asked for: social feed, posts, chat, reactions - DELIVERED.
+Still wanted: 24h Stories, multi-photo profiles, richer profile fields
+(hobbies/fav place/fav dish), per-post link previews (OG images), notifications.
