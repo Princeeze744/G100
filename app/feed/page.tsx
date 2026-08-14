@@ -57,13 +57,22 @@ function PostImages({ urls, onOpen }: { urls: string[]; onOpen: (i: number) => v
 
   if (imgs.length === 1) {
     return (
-      <div className="mt-3 overflow-hidden rounded-2xl border border-white/5 bg-black/20">
+      <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/5" style={{ maxHeight: "80vh" }}>
+        <div
+          className="absolute inset-0 scale-125"
+          style={{
+            backgroundImage: "url(" + imgs[0] + ")",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(28px) brightness(0.5)",
+          }}
+        />
         <img
           src={imgs[0]}
           alt=""
           onClick={() => onOpen(0)}
-          className="mx-auto block h-auto w-full cursor-zoom-in"
-          style={{ maxHeight: "85vh", objectFit: "contain" }}
+          className="relative mx-auto block h-auto w-full cursor-zoom-in"
+          style={{ maxHeight: "80vh", objectFit: "contain" }}
           loading="lazy"
         />
       </div>
@@ -195,6 +204,93 @@ function Lightbox({ urls, index, onClose }: { urls: string[]; index: number; onC
         </div>
       )}
     </motion.div>
+  );
+}
+
+function CommentThread({ postId, uid, approved, accent }: { postId: string; uid: string | null; approved: boolean; accent: string }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<any[]>([]);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("post_comments")
+      .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(full_name, photo_url, accent)")
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    setRows(data || []);
+  }, [postId]);
+
+  useEffect(() => {
+    if (open) load();
+  }, [open, load]);
+
+  useEffect(() => {
+    const ch = supabase
+      .channel("comments-" + postId)
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_comments", filter: "post_id=eq." + postId }, () => { if (open) load(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [postId, open, load]);
+
+  async function send() {
+    if (!uid || !text.trim()) return;
+    setSending(true);
+    await supabase.from("post_comments").insert({ post_id: postId, author_id: uid, body: text.trim() });
+    setText("");
+    setSending(false);
+    load();
+  }
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button onClick={() => setOpen((o) => !o)} className="text-xs text-neutral-400 transition hover:text-[var(--bone)]">
+        {open ? "Hide replies" : (rows.length > 0 ? rows.length + (rows.length === 1 ? " reply" : " replies") : "Reply")}
+      </button>
+
+      {open && (
+        <div className="mt-3 flex flex-col gap-3">
+          {rows.map((c) => {
+            const ca = ({ eye: "#e8a33d", ember: "#e2603a", surf: "#3dbfb0" } as Record<string, string>)[c.author?.accent || "eye"];
+            return (
+              <div key={c.id} className="flex gap-2.5">
+                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border" style={{ borderColor: ca + "88" }}>
+                  {c.author?.photo_url ? (
+                    <img src={c.author.photo_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-white/[0.06] text-[0.55rem] text-neutral-300">
+                      {(c.author?.full_name || "G").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 rounded-2xl bg-white/[0.04] px-3 py-2">
+                  <p className="text-xs font-semibold">{c.author?.full_name || "Member"}</p>
+                  <p className="text-sm text-neutral-200">{c.body}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          {approved ? (
+            <div className="flex gap-2">
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && send()}
+                placeholder="Write a reply..."
+                className="flex-1 rounded-full border border-white/15 bg-black/30 px-4 py-2 text-sm text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]"
+              />
+              <button onClick={send} disabled={sending || !text.trim()} className="rounded-full px-4 py-2 text-xs font-semibold text-[var(--ink)] disabled:opacity-40" style={{ background: accent }}>
+                Send
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-500">Log in as a member to reply.</p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -386,6 +482,7 @@ export default function FeedPage() {
                   </button>
                   <button onClick={() => share(p)} className="text-sm text-neutral-400 transition hover:text-[var(--bone)]">Share</button>
                 </div>
+                <CommentThread postId={p.id} uid={uid} approved={approved} accent={a} />
               </motion.article>
             );
           })}
@@ -399,5 +496,7 @@ export default function FeedPage() {
     </main>
   );
 }
+
+
 
 
