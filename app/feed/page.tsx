@@ -18,7 +18,7 @@ type Post = {
   id: string;
   author_id: string;
   body: string;
-  image_url: string;
+  image_urls: string[];
   created_at: string;
   author: Author | null;
   likes: number;
@@ -50,6 +50,154 @@ function Avatar({ url, name, accent, size }: { url?: string; name?: string; acce
   );
 }
 
+// Single image = full natural shape. Multi = tidy grid tiles.
+function PostImages({ urls, onOpen }: { urls: string[]; onOpen: (i: number) => void }) {
+  const imgs = urls.filter(Boolean);
+  if (imgs.length === 0) return null;
+
+  if (imgs.length === 1) {
+    return (
+      <div className="mt-3 overflow-hidden rounded-2xl border border-white/5 bg-black/20">
+        <img
+          src={imgs[0]}
+          alt=""
+          onClick={() => onOpen(0)}
+          className="mx-auto block h-auto w-full cursor-zoom-in"
+          style={{ maxHeight: "85vh", objectFit: "contain" }}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  const tile = "relative overflow-hidden bg-black/30 cursor-zoom-in";
+  const imgCls = "h-full w-full object-cover";
+
+  if (imgs.length === 2) {
+    return (
+      <div className="mt-3 grid grid-cols-2 gap-1 overflow-hidden rounded-2xl" style={{ aspectRatio: "16/10" }}>
+        {imgs.map((u, i) => (
+          <div key={i} className={tile} onClick={() => onOpen(i)}>
+            <img src={u} alt="" className={imgCls} loading="lazy" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (imgs.length === 3) {
+    return (
+      <div className="mt-3 grid grid-cols-2 gap-1 overflow-hidden rounded-2xl" style={{ aspectRatio: "16/10" }}>
+        <div className={tile} onClick={() => onOpen(0)}>
+          <img src={imgs[0]} alt="" className={imgCls} loading="lazy" />
+        </div>
+        <div className="grid grid-rows-2 gap-1">
+          {[1, 2].map((i) => (
+            <div key={i} className={tile} onClick={() => onOpen(i)}>
+              <img src={imgs[i]} alt="" className={imgCls} loading="lazy" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 4+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-1 overflow-hidden rounded-2xl" style={{ aspectRatio: "1/1" }}>
+      {imgs.slice(0, 4).map((u, i) => (
+        <div key={i} className={tile} onClick={() => onOpen(i)}>
+          <img src={u} alt="" className={imgCls} loading="lazy" />
+          {i === 3 && imgs.length > 4 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-xl font-bold text-white">
+              +{imgs.length - 4}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Full-screen lightbox with swipe between images
+function Lightbox({ urls, index, onClose }: { urls: string[]; index: number; onClose: () => void }) {
+  const [i, setI] = useState(index);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setI((v) => Math.min(v + 1, urls.length - 1));
+      if (e.key === "ArrowLeft") setI((v) => Math.max(v - 1, 0));
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [urls.length, onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 p-4"
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-neutral-200 transition hover:bg-white/10"
+      >
+        x
+      </button>
+
+      {urls.length > 1 && (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); setI((v) => Math.max(v - 1, 0)); }}
+            disabled={i === 0}
+            aria-label="Previous"
+            className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-lg text-neutral-200 transition hover:bg-white/10 disabled:opacity-30"
+          >
+            {"\u2039"}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setI((v) => Math.min(v + 1, urls.length - 1)); }}
+            disabled={i === urls.length - 1}
+            aria-label="Next"
+            className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-lg text-neutral-200 transition hover:bg-white/10 disabled:opacity-30"
+          >
+            {"\u203A"}
+          </button>
+        </>
+      )}
+
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={i}
+          src={urls[i]}
+          alt=""
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.25 }}
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[90vh] max-w-full object-contain"
+        />
+      </AnimatePresence>
+
+      {urls.length > 1 && (
+        <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-1.5">
+          {urls.map((_, d) => (
+            <span key={d} className="h-1.5 w-1.5 rounded-full" style={{ background: d === i ? "#fff" : "rgba(255,255,255,0.35)" }} />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function FeedPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uid, setUid] = useState<string | null>(null);
@@ -57,16 +205,17 @@ export default function FeedPage() {
   const [approved, setApproved] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [body, setBody] = useState("");
-  const [img, setImg] = useState<File | null>(null);
-  const [imgPreview, setImgPreview] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [posting, setPosting] = useState(false);
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState("");
+  const [box, setBox] = useState<{ urls: string[]; index: number } | null>(null);
 
   const load = useCallback(async (myId: string | null) => {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, author_id, body, image_url, created_at, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)")
+      .select("id, author_id, body, image_urls, created_at, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) { setErr(error.message); return; }
@@ -81,7 +230,13 @@ export default function FeedPage() {
         if (myId && l.user_id === myId) likedSet.add(l.post_id);
       }
     }
-    setPosts(rows.map((r) => ({ ...r, author: r.author, likes: likesByPost[r.id] || 0, liked: likedSet.has(r.id) })));
+    setPosts(rows.map((r) => ({
+      ...r,
+      image_urls: r.image_urls || [],
+      author: r.author,
+      likes: likesByPost[r.id] || 0,
+      liked: likedSet.has(r.id),
+    })));
   }, []);
 
   useEffect(() => {
@@ -89,15 +244,8 @@ export default function FeedPage() {
       const myId = data.user?.id || null;
       setUid(myId);
       if (myId) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("full_name, photo_url, accent, role_title, approved")
-          .eq("id", myId)
-          .single();
-        if (prof) {
-          setMe(prof as Author);
-          setApproved(!!prof.approved);
-        }
+        const { data: prof } = await supabase.from("profiles").select("full_name, photo_url, accent, role_title, approved").eq("id", myId).single();
+        if (prof) { setMe(prof as Author); setApproved(!!prof.approved); }
       }
       await load(myId);
       setReady(true);
@@ -113,22 +261,37 @@ export default function FeedPage() {
     return () => { supabase.removeChannel(ch); };
   }, [uid, load]);
 
-  function pickImage(f: File) { setImg(f); setImgPreview(URL.createObjectURL(f)); }
+  function addFiles(list: FileList) {
+    const incoming = Array.from(list).slice(0, 4 - files.length);
+    const next = [...files, ...incoming].slice(0, 4);
+    setFiles(next);
+    setPreviews(next.map((f) => URL.createObjectURL(f)));
+  }
+  function removeFile(i: number) {
+    const next = files.filter((_, x) => x !== i);
+    setFiles(next);
+    setPreviews(next.map((f) => URL.createObjectURL(f)));
+  }
 
   async function submit() {
-    if (!uid || (!body.trim() && !img)) return;
+    if (!uid || (!body.trim() && files.length === 0)) return;
     setPosting(true); setErr("");
-    let image_url = "";
-    if (img) {
-      const small = await shrinkImage(img, 1400);
-      const path = uid + "/" + Date.now() + ".jpg";
+    const urls: string[] = [];
+    for (const file of files) {
+      const small = await shrinkImage(file, 1400);
+      const path = uid + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + ".jpg";
       const { error: upErr } = await supabase.storage.from("posts").upload(path, small, { contentType: "image/jpeg" });
       if (upErr) { setErr("Image upload failed: " + upErr.message); setPosting(false); return; }
-      image_url = supabase.storage.from("posts").getPublicUrl(path).data.publicUrl;
+      urls.push(supabase.storage.from("posts").getPublicUrl(path).data.publicUrl);
     }
-    const { error } = await supabase.from("posts").insert({ author_id: uid, body: body.trim(), image_url });
+    const { error } = await supabase.from("posts").insert({
+      author_id: uid,
+      body: body.trim(),
+      image_url: urls[0] || "",
+      image_urls: urls,
+    });
     if (error) { setErr("Post failed: " + error.message); setPosting(false); return; }
-    setBody(""); setImg(null); setImgPreview(""); setPosting(false);
+    setBody(""); setFiles([]); setPreviews([]); setPosting(false);
     await load(uid);
   }
 
@@ -142,11 +305,8 @@ export default function FeedPage() {
   async function share(p: Post) {
     const text = (p.body || "A post from G100").slice(0, 100);
     const url = window.location.origin + "/feed";
-    if (navigator.share) {
-      try { await navigator.share({ title: "G100", text, url }); } catch {}
-    } else {
-      window.open("https://wa.me/?text=" + encodeURIComponent(text + " - " + url), "_blank");
-    }
+    if (navigator.share) { try { await navigator.share({ title: "G100", text, url }); } catch {} }
+    else window.open("https://wa.me/?text=" + encodeURIComponent(text + " - " + url), "_blank");
   }
 
   async function del(p: Post) {
@@ -173,17 +333,23 @@ export default function FeedPage() {
             <Avatar url={me?.photo_url} name={me?.full_name} accent={myAccent} size={40} />
             <div className="flex-1">
               <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What's on your mind?" className="min-h-[60px] w-full resize-none bg-transparent text-sm text-[var(--bone)] outline-none placeholder:text-neutral-500" />
-              {imgPreview && (
-                <div className="relative mt-2 overflow-hidden rounded-2xl">
-                  <img src={imgPreview} alt="" className="w-full object-cover" style={{ maxHeight: "320px" }} />
-                  <button onClick={() => { setImg(null); setImgPreview(""); }} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs text-white" aria-label="Remove image">x</button>
+              {previews.length > 0 && (
+                <div className="mt-2 grid grid-cols-4 gap-2">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative aspect-square overflow-hidden rounded-xl">
+                      <img src={src} alt="" className="h-full w-full object-cover" />
+                      <button onClick={() => removeFile(i)} className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-xs text-white" aria-label="Remove">x</button>
+                    </div>
+                  ))}
                 </div>
               )}
               {err && <p className="mt-2 text-xs text-[var(--ember)]">{err}</p>}
               <div className="mt-3 flex items-center justify-between">
-                <button onClick={() => fileRef.current?.click()} className="text-xs text-neutral-400 transition hover:text-[var(--eye)]">+ Photo</button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) pickImage(f); }} />
-                <button onClick={submit} disabled={posting || (!body.trim() && !img)} className="rounded-full px-5 py-2 text-xs font-semibold text-[var(--ink)] transition disabled:opacity-40" style={{ background: myAccent }}>{posting ? "Posting..." : "Post"}</button>
+                <button onClick={() => fileRef.current?.click()} disabled={files.length >= 4} className="text-xs text-neutral-400 transition hover:text-[var(--eye)] disabled:opacity-40">
+                  + Photo {files.length > 0 ? "(" + files.length + "/4)" : ""}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }} />
+                <button onClick={submit} disabled={posting || (!body.trim() && files.length === 0)} className="rounded-full px-5 py-2 text-xs font-semibold text-[var(--ink)] transition disabled:opacity-40" style={{ background: myAccent }}>{posting ? "Posting..." : "Post"}</button>
               </div>
             </div>
           </div>
@@ -207,16 +373,12 @@ export default function FeedPage() {
                   <Avatar url={p.author?.photo_url} name={p.author?.full_name} accent={a} size={44} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{p.author?.full_name || "G100 Member"}</p>
-                    <p className="truncate text-xs text-neutral-400">{p.author?.role_title || "Visionary Leader"} · {timeAgo(p.created_at)}</p>
+                    <p className="truncate text-xs text-neutral-400">{p.author?.role_title || "Visionary Leader"} {"\u00B7"} {timeAgo(p.created_at)}</p>
                   </div>
                   {p.author_id === uid && (<button onClick={() => del(p)} className="text-xs text-neutral-500 transition hover:text-[var(--ember)]" aria-label="Delete">Delete</button>)}
                 </div>
                 {p.body && <p className="mt-3 whitespace-pre-wrap text-[0.95rem] leading-relaxed text-neutral-100">{p.body}</p>}
-                {p.image_url && (
-                  <div className="mt-3 flex justify-center overflow-hidden rounded-2xl bg-black/30">
-                    <img src={p.image_url} alt="" className="w-full object-cover" style={{ maxHeight: "440px" }} />
-                  </div>
-                )}
+                <PostImages urls={p.image_urls} onOpen={(i) => setBox({ urls: p.image_urls.filter(Boolean), index: i })} />
                 <div className="mt-4 flex items-center gap-6">
                   <button onClick={() => like(p)} disabled={!approved} className="flex items-center gap-1.5 text-sm disabled:opacity-50" style={{ color: p.liked ? a : "var(--bone)" }}>
                     <span className="text-base">{p.liked ? "\u2665" : "\u2661"}</span>
@@ -230,6 +392,10 @@ export default function FeedPage() {
         </AnimatePresence>
         {posts.length === 0 && <p className="py-16 text-center text-sm text-neutral-500">No posts yet.</p>}
       </div>
+
+      <AnimatePresence>
+        {box && <Lightbox urls={box.urls} index={box.index} onClose={() => setBox(null)} />}
+      </AnimatePresence>
     </main>
   );
 }
