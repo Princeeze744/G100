@@ -102,7 +102,13 @@ export default function ThreadDetail() {
     load(uid);
   }
 
-  if (!ready) return <main className="flex min-h-screen items-center justify-center"><p className="text-neutral-400">Loading...</p></main>;
+  if (!ready) return (
+    <main className="mx-auto max-w-xl px-4 pb-32 pt-24 sm:px-6">
+      <div className="h-4 w-16 animate-pulse rounded bg-white/5" />
+      <div className="mt-6 h-40 animate-pulse rounded-3xl bg-white/5" />
+      <div className="mt-6 h-20 animate-pulse rounded-2xl bg-white/5" />
+    </main>
+  );
   if (!post) return <main className="flex min-h-screen items-center justify-center"><p className="text-neutral-400">Post not found.</p></main>;
 
   const tops = comments.filter((c) => !c.parent_id);
@@ -177,3 +183,4 @@ export default function ThreadDetail() {
     </main>
   );
 }
+
