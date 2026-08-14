@@ -98,6 +98,29 @@ NOT with browser extensions on).
 - Possible next: activity feed / posts, in-app chat, richer events
   (see "SCALING" below - discuss scope before building)
 
+
+## THE FEED (built - app/feed/page.tsx)
+Members-only ACTIONS, public VIEWING (anyone sees feed; login to post/like/share).
+- Post: text + up to 4 images. Realtime via Supabase channel.
+- Single image: shown full/uncropped (object-contain) on a blurred-darkened
+  version of ITSELF as backdrop - fills side/letterbox gaps beautifully.
+  KEEP THE BLUR - user prefers filled over empty gaps.
+- 2-4 images: tidy equal grid tiles (2=side by side, 3=big+2, 4=2x2, +N overflow).
+- Tap any image: full-screen Lightbox, swipe/arrow between, dots, Esc/X to close.
+- Like = heart (only approved members). Share = native share / WhatsApp fallback.
+- Hot post (3+ likes): glows in author accent colour.
+- DB: posts(author_id, body, image_url, image_urls text[], created_at),
+  post_likes(post_id,user_id), post_comments(...未built UI yet).
+  Storage bucket: posts (public, members upload). Images shrunk client-side.
+- Navbar "Feed" link shows for everyone.
+
+## STILL TO BUILD (judges asked for these)
+- Comments UI (table post_comments already exists)
+- 24-hour Stories (disappearing) - the showstopper
+- Multi-photo profiles, richer profile fields (hobbies, fav place/dish)
+- Notifications (PWA push)
+NOTE: competition status - leading by ~50 pts, top 5 of 100, ~1 month runway.
+Judges pushed challenge: prove it's a living social platform (feed/posts/chat).
 ## SCALING VISION (under discussion)
 Owner wants to explore turning this into a fuller social platform:
 member posts/feed, in-app chat, social-media integration, video reels.
@@ -105,3 +128,4 @@ This is achievable on the SAME stack (Supabase Realtime handles chat &
 live feeds). Approach: phase it, keep the calm/restraint law, never let
 features bloat the award showpiece. Build member-only social features
 BEHIND the login so the public landing stays cinematic and clean.
+

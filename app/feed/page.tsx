@@ -57,22 +57,13 @@ function PostImages({ urls, onOpen }: { urls: string[]; onOpen: (i: number) => v
 
   if (imgs.length === 1) {
     return (
-      <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/5" style={{ maxHeight: "80vh" }}>
-        <div
-          className="absolute inset-0 scale-125"
-          style={{
-            backgroundImage: "url(" + imgs[0] + ")",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "blur(28px) brightness(0.5)",
-          }}
-        />
+      <div className="mt-3 overflow-hidden rounded-2xl border border-white/5 bg-black/20">
         <img
           src={imgs[0]}
           alt=""
           onClick={() => onOpen(0)}
-          className="relative mx-auto block h-auto w-full cursor-zoom-in"
-          style={{ maxHeight: "80vh", objectFit: "contain" }}
+          className="mx-auto block h-auto w-full cursor-zoom-in"
+          style={{ maxHeight: "85vh", objectFit: "contain" }}
           loading="lazy"
         />
       </div>
@@ -408,4 +399,5 @@ export default function FeedPage() {
     </main>
   );
 }
+
 
