@@ -219,8 +219,26 @@ function CommentThread({ postId, uid, approved, accent }: { postId: string; uid:
       .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(full_name, photo_url, accent)")
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
-    setRows(data || []);
-  }, [postId]);
+    const list = data || [];
+    const ids = list.map((c: any) => c.id);
+    const counts: Record<string, number> = {};
+    const mine = new Set<string>();
+    if (ids.length) {
+      const { data: cl } = await supabase.from("comment_likes").select("comment_id, user_id").in("comment_id", ids);
+      for (const l of cl || []) {
+        counts[l.comment_id] = (counts[l.comment_id] || 0) + 1;
+        if (uid && l.user_id === uid) mine.add(l.comment_id);
+      }
+    }
+    setRows(list.map((c: any) => ({ ...c, likes: counts[c.id] || 0, liked: mine.has(c.id) })));
+  }, [postId, uid]);
+
+  async function likeComment(c: any) {
+    if (!uid || !approved) return;
+    setRows((prev) => prev.map((x) => x.id === c.id ? { ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) } : x));
+    if (c.liked) await supabase.from("comment_likes").delete().eq("comment_id", c.id).eq("user_id", uid);
+    else await supabase.from("comment_likes").insert({ comment_id: c.id, user_id: uid });
+  }
 
   useEffect(() => {
     if (open) load();
@@ -264,9 +282,15 @@ function CommentThread({ postId, uid, approved, accent }: { postId: string; uid:
                     </div>
                   )}
                 </div>
-                <div className="flex-1 rounded-2xl bg-white/[0.04] px-3 py-2">
-                  <p className="text-xs font-semibold">{c.author?.full_name || "Member"}</p>
-                  <p className="text-sm text-neutral-200">{c.body}</p>
+                <div className="flex-1">
+                  <div className="rounded-2xl bg-white/[0.04] px-3 py-2">
+                    <p className="text-xs font-semibold">{c.author?.full_name || "Member"}</p>
+                    <p className="text-sm text-neutral-200">{c.body}</p>
+                  </div>
+                  <button onClick={() => likeComment(c)} disabled={!approved} className="mt-1 flex items-center gap-1 pl-3 text-xs disabled:opacity-50" style={{ color: c.liked ? ca : "var(--smoke)" }}>
+                    <span>{c.liked ? "\u2665" : "\u2661"}</span>
+                    {c.likes > 0 && <span className="tabular-nums">{c.likes}</span>}
+                  </button>
                 </div>
               </div>
             );
@@ -496,6 +520,7 @@ export default function FeedPage() {
     </main>
   );
 }
+
 
 
 
