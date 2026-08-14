@@ -240,6 +240,12 @@ function CommentThread({ postId, uid, approved, accent }: { postId: string; uid:
     else await supabase.from("comment_likes").insert({ comment_id: c.id, user_id: uid });
   }
 
+  async function sendReply(parentId: string, replyText: string) {
+    if (!uid || !replyText.trim()) return;
+    await supabase.from("post_comments").insert({ post_id: postId, author_id: uid, body: replyText.trim(), parent_id: parentId });
+    load();
+  }
+
   useEffect(() => {
     if (open) load();
   }, [open, load]);
@@ -520,6 +526,7 @@ export default function FeedPage() {
     </main>
   );
 }
+
 
 
 
