@@ -149,3 +149,24 @@ G100: 120 pts | 2nd: 100 | 3rd: 80 | 4th: 60. Leading throughout.
 Judges asked for: social feed, posts, chat, reactions - DELIVERED.
 Still wanted: 24h Stories, multi-photo profiles, richer profile fields
 (hobbies/fav place/fav dish), per-post link previews (OG images), notifications.
+
+## THREADS PLATFORM (built - replaces /feed)
+/threads = public timeline. /threads/[id] = post detail with all comments open.
+/member/[id] = member profile + their personal post timeline.
+Shared: lib/social.ts, lib/usePosts.ts (data + realtime),
+app/components/SocialUI.tsx (Avatar, PostImages, Lightbox, PostCard),
+app/components/Composer.tsx.
+Features: post (text + up to 4 images), like, comment, comment-like,
+reply-to-comment (1 level), repost, quote-post, share, edit + delete own
+post/comment. Counts on cards. Realtime everywhere. Public VIEWS all;
+only approved members act.
+DB adds: posts.repost_of, posts.is_quote, post_comments.parent_id,
+comment_likes table. RLS public-read, member-write.
+UX: skeleton loaders, WhatsApp float only on homepage.
+NOTE: PowerShell needs -LiteralPath for paths with [brackets].
+
+## COMPETITION STATUS (day 5)
+G100 120 pts | 2nd 100 | 3rd 80 | 4th 60.
+Delivered what judges asked: feed, posts, reactions, comments, chat-like threads.
+Still wanted: 24h Stories, multi-photo profiles, richer profile fields
+(hobbies/fav place/fav dish), per-post OG link previews, push notifications.
