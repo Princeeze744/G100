@@ -90,11 +90,7 @@ export default function Navbar() {
             Gate
           </Link>
         )}
-        {loggedIn && (
-          <Link href="/feed" className={linkCls}>
-            Feed
-          </Link>
-        )}
+        <Link href="/feed" className={linkCls}>Feed</Link>
         {loggedIn ? (
           <Link
             href="/profile"
@@ -115,6 +111,7 @@ export default function Navbar() {
     </motion.nav>
   );
 }
+
 
 
 
