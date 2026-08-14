@@ -225,7 +225,7 @@ export default function FeedPage() {
             />
             {imgPreview && (
               <div className="relative mt-2 overflow-hidden rounded-2xl">
-                <img src={imgPreview} alt="" className="max-h-72 w-full object-cover" />
+                <img src={imgPreview} alt="" className="max-h-80 w-full object-cover" />
                 <button
                   onClick={() => { setImg(null); setImgPreview(""); }}
                   className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-xs text-white"
@@ -296,9 +296,7 @@ export default function FeedPage() {
                 </div>
                 {p.body && <p className="mt-3 whitespace-pre-wrap text-[0.95rem] leading-relaxed text-neutral-100">{p.body}</p>}
                 {p.image_url && (
-                  <div className="mt-3 overflow-hidden rounded-2xl">
-                    <img src={p.image_url} alt="" className="w-full object-cover" />
-                  </div>
+                  <div className="mt-3 overflow-hidden rounded-2xl bg-black/20"><img src={p.image_url} alt="" className="max-h-[70vh] w-full object-cover" style={{ maxHeight: "480px" }} /></div>
                 )}
                 <div className="mt-4 flex items-center gap-5">
                   <button onClick={() => like(p)} className="flex items-center gap-1.5 text-sm" style={{ color: p.liked ? a : "var(--bone)" }}>
@@ -317,5 +315,6 @@ export default function FeedPage() {
     </main>
   );
 }
+
 
 
