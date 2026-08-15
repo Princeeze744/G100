@@ -72,3 +72,6 @@ input, textarea {
   user-select: text;
   -webkit-user-select: text;
 }
+
+/* hide bottom tabs while typing a reply */
+body.typing nav.fixed.bottom-0 { transform: translateY(120%); }

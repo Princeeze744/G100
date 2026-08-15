@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { usePosts } from "../../lib/usePosts";
 import { PostCard } from "../components/SocialUI";
 import { Composer } from "../components/Composer";
+import Stories from "../components/Stories";
 
 export default function ThreadsPage() {
   const { posts, uid, approved, ready, refresh } = usePosts();
@@ -19,17 +20,7 @@ export default function ThreadsPage() {
   }, [uid]);
 
   if (!ready) {
-    return (
-      <main className="mx-auto max-w-xl px-4 pb-24 pt-24 sm:px-6">
-        <h1 className="text-2xl font-bold">Threads</h1>
-        <p className="mb-8 text-sm text-neutral-400">The voice of G100.</p>
-        <div className="flex flex-col gap-4">
-          <div className="h-32 animate-pulse rounded-3xl bg-white/5" />
-          <div className="h-56 animate-pulse rounded-3xl bg-white/5" />
-          <div className="h-40 animate-pulse rounded-3xl bg-white/5" />
-        </div>
-      </main>
-    );
+    return <main className="flex min-h-screen items-center justify-center"><p className="text-neutral-400">Loading Threads...</p></main>;
   }
 
   return (
@@ -38,6 +29,8 @@ export default function ThreadsPage() {
         <h1 className="text-2xl font-bold">Threads</h1>
         <p className="text-sm text-neutral-400">The voice of G100.</p>
       </div>
+
+      <Stories uid={uid} me={me} />
 
       {approved && uid ? (
         <Composer uid={uid} me={me} onPosted={refresh} />
@@ -59,5 +52,3 @@ export default function ThreadsPage() {
     </main>
   );
 }
-
-

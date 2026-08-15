@@ -103,7 +103,7 @@ export default function ThreadDetail() {
   }
 
   if (!ready) return (
-    <main className="mx-auto max-w-xl px-4 pb-32 pt-24 sm:px-6">
+    <main className="mx-auto max-w-xl px-4 pb-44 pt-24 sm:px-6">
       <div className="h-4 w-16 animate-pulse rounded bg-white/5" />
       <div className="mt-6 h-40 animate-pulse rounded-3xl bg-white/5" />
       <div className="mt-6 h-20 animate-pulse rounded-2xl bg-white/5" />
@@ -145,7 +145,7 @@ export default function ThreadDetail() {
   }
 
   return (
-    <main className="mx-auto max-w-xl px-4 pb-32 pt-24 sm:px-6">
+    <main className="mx-auto max-w-xl px-4 pb-44 pt-24 sm:px-6">
       <button onClick={() => router.back()} className="mb-5 text-sm text-neutral-400 transition hover:text-[var(--eye)]">{"\u2190"} Back</button>
 
       <PostCard p={post} uid={uid} approved={approved} onChanged={() => load(uid)} />
@@ -165,7 +165,7 @@ export default function ThreadDetail() {
       </div>
 
       {approved ? (
-        <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/95 p-4 backdrop-blur-xl">
+        <div className="fixed bottom-0 left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:pb-4">
           {replyTo && (
             <div className="mb-2 flex items-center justify-between text-xs text-neutral-400">
               <span>Replying to {replyTo.author?.full_name || "Member"}</span>
@@ -173,7 +173,7 @@ export default function ThreadDetail() {
             </div>
           )}
           <div className="flex gap-2">
-            <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder={replyTo ? "Write a reply..." : "Write a comment..."} className="flex-1 rounded-full border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]" />
+            <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => document.body.classList.add("typing")} onBlur={() => document.body.classList.remove("typing")} onKeyDown={(e) => e.key === "Enter" && send()} placeholder={replyTo ? "Write a reply..." : "Write a comment..."} className="flex-1 rounded-full border border-white/15 bg-black/40 px-4 py-2.5 text-sm text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]" />
             <button onClick={send} disabled={!text.trim()} className="rounded-full bg-[var(--eye)] px-5 py-2.5 text-xs font-semibold text-[var(--ink)] disabled:opacity-40">Send</button>
           </div>
         </div>
@@ -183,4 +183,5 @@ export default function ThreadDetail() {
     </main>
   );
 }
+
 
