@@ -16,6 +16,10 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 639px) {
+  main { padding-top: 3.5rem; }
+}
+
 body {
   background: var(--ink);
   color: var(--bone);
@@ -37,3 +41,4 @@ body::after {
   background: var(--eye);
   color: var(--ink);
 }
+
