@@ -10,6 +10,7 @@ import { ACCENTS, EASE, initials } from "../../lib/social";
 
 const ITEMS = [
   { href: "/threads", label: "Threads", icon: "\u25C8" },
+  { href: "/messages", label: "Messages", icon: "\u2709" },
   { href: "/notifications", label: "Notifications", icon: "\u25C9" },
   { href: "/bookmarks", label: "Bookmarks", icon: "\u2606" },
   { href: "/#idea", label: "The Idea", icon: "\u25CE" },
@@ -136,3 +137,4 @@ export default function SideDrawer({ open, onClose }: { open: boolean; onClose: 
     </AnimatePresence>
   );
 }
+

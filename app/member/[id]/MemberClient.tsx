@@ -71,6 +71,22 @@ export default function MemberClient() {
         </div>
       )}
 
+      {uid && uid !== id && (
+        <button
+          onClick={async () => {
+            const [x, y] = [uid, id].sort();
+            const { data: ex } = await supabase.from("conversations").select("id").eq("user_a", x).eq("user_b", y).maybeSingle();
+            if (ex?.id) { router.push("/messages/" + ex.id); return; }
+            const { data: made } = await supabase.from("conversations").insert({ user_a: x, user_b: y }).select("id").single();
+            if (made?.id) router.push("/messages/" + made.id);
+          }}
+          className="mt-6 rounded-full px-6 py-2.5 text-sm font-semibold text-[var(--ink)]"
+          style={{ background: a }}
+        >
+          Message
+        </button>
+      )}
+
       {socials.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {socials.map((s) => (
@@ -92,4 +108,5 @@ export default function MemberClient() {
     </main>
   );
 }
+
 
