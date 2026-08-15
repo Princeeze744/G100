@@ -280,7 +280,7 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
 
         {(src as any).video_url ? (
           <div className="mt-3 overflow-hidden rounded-2xl border border-white/5 bg-black">
-            <video src={(src as any).video_url} controls playsInline preload="metadata" className="max-h-[70vh] w-full" />
+            <video src={(src as any).video_url + "#t=0.1"} controls playsInline preload="metadata" className="max-h-[70vh] w-full bg-black" />
           </div>
         ) : null}
 
@@ -342,3 +342,4 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
     </>
   );
 }
+

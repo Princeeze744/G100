@@ -75,3 +75,23 @@ input, textarea {
 
 /* hide bottom tabs while typing a reply */
 body.typing nav.fixed.bottom-0 { transform: translateY(120%); }
+
+/* iOS zooms into inputs under 16px - this is the real "zoom" culprit */
+input, textarea, select, button {
+  font-size: 16px !important;
+}
+@media (min-width: 640px) {
+  input, textarea, select, button { font-size: inherit !important; }
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  overscroll-behavior-y: none;
+}
+
+/* video posters render dark, not black voids */
+video {
+  background: #14100c;
+  border-radius: 1rem;
+}

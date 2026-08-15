@@ -13,6 +13,15 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-grotesk",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover" as const,
+  themeColor: "#0d0b09",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://g100-eight.vercel.app"),
   title: "G100 - A Group of Visionary Leaders",
@@ -46,6 +55,7 @@ export default function RootLayout({
     </html>
   );
 }
+
 
 
 
