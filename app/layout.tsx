@@ -6,8 +6,6 @@ import Navbar from "./components/Navbar";
 import MobileTabs from "./components/MobileTabs";
 import InstallPrompt from "./components/InstallPrompt";
 import SWRegister from "./components/SWRegister";
-import WhatsAppFloat from "./components/WhatsAppFloat";
-
 const spaceGrotesk = Space_Grotesk({
   display: "swap",
   subsets: ["latin"],
@@ -40,12 +38,12 @@ export default function RootLayout({
         <MobileTabs />
         <InstallPrompt />
         <SWRegister />
-        <WhatsAppFloat />
         {children}
       </body>
     </html>
   );
 }
+
 
 
 
