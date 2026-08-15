@@ -42,3 +42,33 @@ body::after {
   color: var(--ink);
 }
 
+
+/* ===== INSTANT TOUCH RESPONSE ===== */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:active, a:active, [role="button"]:active {
+  transform: scale(0.94);
+  transition: transform 60ms ease-out;
+}
+
+button, a, [role="button"] {
+  transition: transform 140ms cubic-bezier(0.25, 0.1, 0.25, 1),
+              background-color 140ms ease, color 140ms ease;
+}
+
+img {
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
