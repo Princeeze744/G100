@@ -280,24 +280,26 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
           </Link>
         )}
 
-        <div className="mt-4 flex items-center gap-5 text-sm">
-          <Link href={"/threads/" + p.id} className="flex items-center gap-1.5 text-neutral-400 transition hover:text-[var(--bone)]">
-            <span>{"\u{1F4AC}"}</span>
-            <span className="tabular-nums">{p.comments}</span>
+        <div className="mt-3 flex items-center justify-between">
+          <Link href={"/threads/" + p.id} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-neutral-400 transition hover:bg-white/[0.06] hover:text-[var(--bone)]" aria-label="Comments">
+            <span className="text-base">{"\u{1F4AC}"}</span>
+            <span className="text-sm tabular-nums">{p.comments}</span>
           </Link>
-          <button onClick={repost} disabled={!approved} className="flex items-center gap-1.5 transition disabled:opacity-50" style={{ color: p.reposted ? "#3dbfb0" : "var(--smoke)" }}>
-            <span>{"\u21BB"}</span>
-            <span className="tabular-nums">{p.reposts}</span>
+          <button onClick={repost} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.reposted ? "#3dbfb0" : "var(--smoke)" }} aria-label="Repost">
+            <span className="text-lg">{"\u21BB"}</span>
+            <span className="text-sm tabular-nums">{p.reposts}</span>
           </button>
-          <button onClick={like} disabled={!approved} className="flex items-center gap-1.5 transition disabled:opacity-50" style={{ color: p.liked ? a : "var(--smoke)" }}>
-            <span>{p.liked ? "\u2665" : "\u2661"}</span>
-            <span className="tabular-nums">{p.likes}</span>
+          <button onClick={like} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.liked ? a : "var(--smoke)" }} aria-label="Like">
+            <span className="text-lg">{p.liked ? "\u2665" : "\u2661"}</span>
+            <span className="text-sm tabular-nums">{p.likes}</span>
           </button>
-          <button onClick={() => setQuoteOpen((q) => !q)} disabled={!approved} className="text-xs text-neutral-400 transition hover:text-[var(--bone)] disabled:opacity-50">Quote</button>
-          <button onClick={bookmark} disabled={!uid} className="ml-auto transition disabled:opacity-50" style={{ color: p.bookmarked ? "#e8a33d" : "var(--smoke)" }} aria-label="Bookmark">
-            {p.bookmarked ? "\u{1F516}" : "\u2606"}
+          <button onClick={() => setQuoteOpen((q) => !q)} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center rounded-full px-3 text-xs text-neutral-400 transition hover:bg-white/[0.06] hover:text-[var(--bone)] disabled:opacity-50" aria-label="Quote">Quote</button>
+          <button onClick={bookmark} disabled={!uid} className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.bookmarked ? "#e8a33d" : "var(--smoke)" }} aria-label="Bookmark">
+            <span className="text-lg">{p.bookmarked ? "\u2605" : "\u2606"}</span>
           </button>
-          <button onClick={share} className="text-neutral-400 transition hover:text-[var(--bone)]" aria-label="Share">{"\u21AA"}</button>
+          <button onClick={share} className="flex h-11 w-11 items-center justify-center rounded-full text-neutral-400 transition hover:bg-white/[0.06] hover:text-[var(--bone)]" aria-label="Share">
+            <span className="text-lg">{"\u21AA"}</span>
+          </button>
         </div>
 
         {quoteOpen && approved && (

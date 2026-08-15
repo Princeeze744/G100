@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { ACCENTS, initials } from "../../lib/social";
 import SideDrawer from "./SideDrawer";
 
 export default function MobileTabs() {
   const pathname = usePathname();
+  const router = useRouter();
   const [uid, setUid] = useState<string | null>(null);
   const [me, setMe] = useState<any>(null);
   const [unread, setUnread] = useState(0);
   const [drawer, setDrawer] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -41,29 +44,22 @@ export default function MobileTabs() {
     return () => { supabase.removeChannel(ch); };
   }, [uid]);
 
-  // edge swipe to open drawer
+  // hide chrome on scroll down, reveal on scroll up
   useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-    const onStart = (e: TouchEvent) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 60) { setHidden(false); lastY.current = y; return; }
+      const diff = y - lastY.current;
+      if (Math.abs(diff) < 8) return;
+      setHidden(diff > 0);
+      lastY.current = y;
     };
-    const onEnd = (e: TouchEvent) => {
-      if (startX > 32) return;
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = Math.abs(e.changedTouches[0].clientY - startY);
-      if (dx > 70 && dy < 60) setDrawer(true);
-    };
-    window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("touchend", onEnd, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("touchend", onEnd);
-    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const accent = ACCENTS[me?.accent || "eye"];
+  const showFab = pathname === "/threads";
 
   const tabs = [
     { href: "/", label: "Home", icon: "\u2302" },
@@ -75,49 +71,88 @@ export default function MobileTabs() {
     <>
       <SideDrawer open={drawer} onClose={() => setDrawer(false)} />
 
-      <header className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#0d0b09]/85 px-4 py-2.5 backdrop-blur-xl sm:hidden">
-        <button onClick={() => setDrawer(true)} aria-label="Open menu" className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border" style={{ borderColor: accent }}>
-          {me?.photo_url ? (
-            <img src={me.photo_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-[0.6rem]" style={{ color: accent }}>{uid ? initials(me?.full_name) : "\u2261"}</span>
-          )}
+      {/* slim top bar */}
+      <motion.header
+        animate={{ y: hidden ? -70 : 0 }}
+        transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#0d0b09]/90 px-2 backdrop-blur-xl sm:hidden"
+      >
+        <button onClick={() => setDrawer(true)} aria-label="Open menu" className="flex h-12 w-12 items-center justify-center">
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border" style={{ borderColor: accent }}>
+            {me?.photo_url ? (
+              <img src={me.photo_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[0.6rem]" style={{ color: accent }}>{uid ? initials(me?.full_name) : "\u2261"}</span>
+            )}
+          </span>
         </button>
-        <Link href="/"><img src="/eagle.svg" alt="G100" className="h-6 w-auto invert" /></Link>
-        <Link href="/bookmarks" aria-label="Bookmarks" className="text-lg" style={{ color: "var(--smoke)" }}>{"\u2606"}</Link>
-      </header>
+        <Link href="/" className="flex h-12 items-center px-3">
+          <img src="/eagle.svg" alt="G100" className="h-6 w-auto invert" />
+        </Link>
+        <Link href="/bookmarks" aria-label="Bookmarks" className="flex h-12 w-12 items-center justify-center text-xl" style={{ color: "var(--smoke)" }}>
+          {"\u2606"}
+        </Link>
+      </motion.header>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0d0b09]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden">
-        <div className="flex items-stretch justify-around">
+      {/* compose FAB */}
+      <AnimatePresence>
+        {showFab && uid && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: hidden ? 0.85 : 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              setTimeout(() => {
+                const ta = document.querySelector("textarea") as HTMLTextAreaElement | null;
+                ta?.focus();
+              }, 350);
+            }}
+            aria-label="New post"
+            className="fixed bottom-[5.5rem] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full text-2xl font-light text-[var(--ink)] shadow-lg sm:hidden"
+            style={{ background: accent, boxShadow: "0 6px 24px " + accent + "66" }}
+          >
+            +
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* bottom tabs */}
+      <motion.nav
+        animate={{ y: hidden ? 90 : 0 }}
+        transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0d0b09]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
+      >
+        <div className="grid grid-cols-4">
           {tabs.map((t) => {
             const active = pathname === t.href || (t.href !== "/" && pathname.startsWith(t.href));
             return (
-              <Link key={t.href} href={t.href} className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5">
-                <span className="text-lg" style={{ color: active ? "var(--eye)" : "var(--smoke)" }}>{t.icon}</span>
-                <span className="text-[0.6rem]" style={{ color: active ? "var(--eye)" : "var(--smoke)" }}>{t.label}</span>
+              <Link key={t.href} href={t.href} className="relative flex h-14 flex-col items-center justify-center gap-1">
+                <span className="text-xl leading-none" style={{ color: active ? "var(--eye)" : "var(--smoke)" }}>{t.icon}</span>
+                <span className="text-[0.62rem] leading-none" style={{ color: active ? "var(--eye)" : "var(--smoke)" }}>{t.label}</span>
                 {!!t.badge && t.badge > 0 && (
-                  <span className="absolute right-[24%] top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ember)] px-1 text-[0.55rem] font-bold text-white">
+                  <span className="absolute right-[26%] top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--ember)] px-1 text-[0.55rem] font-bold text-white">
                     {t.badge > 9 ? "9+" : t.badge}
                   </span>
                 )}
-                {active && <motion.span layoutId="tab-dot" className="absolute bottom-0 h-0.5 w-8 rounded-full" style={{ background: "var(--eye)" }} />}
+                {active && <motion.span layoutId="tab-dot" className="absolute bottom-1 h-0.5 w-7 rounded-full" style={{ background: "var(--eye)" }} />}
               </Link>
             );
           })}
 
-          <button onClick={() => setDrawer(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2.5" aria-label="Menu">
-            <span className="flex h-[1.35rem] w-[1.35rem] items-center justify-center overflow-hidden rounded-full border" style={{ borderColor: accent }}>
+          <button onClick={() => (uid ? router.push("/member/" + uid) : router.push("/login"))} className="relative flex h-14 flex-col items-center justify-center gap-1" aria-label="You">
+            <span className="flex h-[1.35rem] w-[1.35rem] items-center justify-center overflow-hidden rounded-full border leading-none" style={{ borderColor: accent }}>
               {me?.photo_url ? (
                 <img src={me.photo_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-[0.5rem]" style={{ color: accent }}>{uid ? initials(me?.full_name) : "\u2261"}</span>
               )}
             </span>
-            <span className="text-[0.6rem] text-[var(--smoke)]">{uid ? "You" : "Menu"}</span>
+            <span className="text-[0.62rem] leading-none text-[var(--smoke)]">{uid ? "You" : "Log in"}</span>
           </button>
         </div>
-      </nav>
+      </motion.nav>
     </>
   );
 }
-
