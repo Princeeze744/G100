@@ -173,7 +173,7 @@ export default function ThreadClient() {
             </div>
           )}
           <div className="flex w-full items-center gap-2">
-            <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => document.body.classList.add("typing")} onBlur={() => document.body.classList.remove("typing")} onKeyDown={(e) => e.key === "Enter" && send()} placeholder={replyTo ? "Write a reply..." : "Write a comment..."} className="min-w-0 flex-1 rounded-full border border-white/15 bg-black/40 px-4 py-2.5 text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]" />
+            <input value={text} onChange={(e) => setText(e.target.value)} onFocus={() => document.body.classList.add("typing")} onBlur={() => document.body.classList.remove("typing")} placeholder={replyTo ? "Write a reply..." : "Write a comment..."} className="min-w-0 flex-1 rounded-full border border-white/15 bg-black/40 px-4 py-2.5 text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]" />
             <button onClick={send} disabled={!text.trim()} className="shrink-0 rounded-full bg-[var(--eye)] px-5 py-2.5 font-semibold text-[var(--ink)] disabled:opacity-40">Send</button>
           </div>
         </div>
@@ -183,6 +183,7 @@ export default function ThreadClient() {
     </main>
   );
 }
+
 
 
 
