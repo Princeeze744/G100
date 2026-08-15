@@ -184,3 +184,25 @@ Still wanted: 24h Stories, multi-photo profiles, richer profile fields
 - /bookmarks: private saved posts. bookmarks table. Star toggle on PostCard.
 - lib/social.ts now exports notify(), notifyMentions(), Body renderer.
 - usePosts({ authorId, bookmarksOnly }).
+
+## DAY 6 - NAVIGATION + SPEED PASS (all built)
+Mobile: slim top header (avatar->drawer, eagle, bookmarks star) + bottom tabs
+(Home/Threads/Alerts/You, 4-col grid, h-14, avatar in You slot) + compose FAB
+on /threads. Header & tabs auto-hide on scroll down, return on scroll up.
+SideDrawer.tsx: slides in on avatar tap, drag-left to close, holds Threads,
+Notifications, Bookmarks, The Idea, The 100, The Life, Eket, Gate, WhatsApp,
+Log out. WhatsAppFloat removed from layout (lives in drawer).
+Desktop: Navbar is sm:flex only, decluttered.
+SPEED: globals.css has touch-action:manipulation, no tap-highlight,
+-webkit-touch-callout:none (kills long-press copy menu), active:scale(0.94).
+lib/haptic.ts tap() = navigator.vibrate. All actions OPTIMISTIC (instant
+local state, DB syncs after) - like, repost, bookmark.
+Touch targets: all action buttons h-11 min-w-11 (44px, Apple HIG).
+Toast.tsx: ToastProvider in layout, useToast() for confirmations.
+DB FIX: notifications table was missing; bookmarks had no policies.
+ALWAYS verify with: select tablename, count(*) from pg_policies where
+tablename in (...) group by tablename;
+
+## COMPETITION (day 6): G100 222 | 2nd 155 | 3rd 123 | 4th 100
+## REMAINING: 24h Stories (SQL already run, UI not built), richer profiles
+## (hobbies/fav place/dish), multi-photo profiles, per-post OG previews.
