@@ -94,7 +94,7 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col px-0 sm:px-6">
+    <main className="mx-auto max-w-xl px-0 sm:px-6">
       <div className="fixed left-1/2 top-0 z-40 flex w-full max-w-xl -translate-x-1/2 items-center gap-3 border-b border-white/10 bg-[#0d0b09]/95 px-4 py-3 backdrop-blur-xl sm:top-20 sm:rounded-2xl sm:border">
         <button onClick={() => router.push("/messages")} className="flex h-10 w-10 items-center justify-center text-lg text-neutral-300" aria-label="Back">{"\u2190"}</button>
         <Link href={"/member/" + other?.id} className="flex min-w-0 items-center gap-2.5">
@@ -110,7 +110,7 @@ export default function ChatPage() {
         </Link>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 px-4 pb-40 pt-24 sm:pt-40">
+      <div className="flex flex-col gap-2 px-4 pb-44 pt-24 sm:pt-40">
         <AnimatePresence initial={false}>
           {msgs.map((m) => {
             const mine = m.sender_id === uid;
@@ -179,7 +179,7 @@ export default function ChatPage() {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onFocus={() => { document.body.classList.add("typing"); setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 320); }}
+            onFocus={() => { document.body.classList.add("typing"); setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }, 380); }}
             onBlur={() => document.body.classList.remove("typing")}
             placeholder="Message..."
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
@@ -193,6 +193,7 @@ export default function ChatPage() {
     </main>
   );
 }
+
 
 
 
