@@ -7,24 +7,35 @@ import { Post } from "./social";
 const SELECT =
   "id, author_id, body, image_urls, created_at, repost_of, is_quote, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)";
 
-export function usePosts(opts: { authorId?: string } = {}) {
+export function usePosts(opts: { authorId?: string; bookmarksOnly?: boolean } = {}) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [uid, setUid] = useState<string | null>(null);
   const [approved, setApproved] = useState(false);
   const [ready, setReady] = useState(false);
 
   const load = useCallback(async (myId: string | null) => {
-    let q = supabase.from("posts").select(SELECT).order("created_at", { ascending: false }).limit(100);
-    if (opts.authorId) q = q.eq("author_id", opts.authorId);
-    const { data } = await q;
-    const rows = (data || []) as any[];
+    let rows: any[] = [];
 
-    // fetch originals for reposts/quotes
+    if (opts.bookmarksOnly) {
+      if (!myId) { setPosts([]); return; }
+      const { data: bms } = await supabase.from("bookmarks").select("post_id").eq("user_id", myId).order("created_at", { ascending: false });
+      const ids = (bms || []).map((b: any) => b.post_id);
+      if (ids.length === 0) { setPosts([]); return; }
+      const { data } = await supabase.from("posts").select(SELECT).in("id", ids);
+      rows = (data || []) as any[];
+      rows.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+    } else {
+      let q = supabase.from("posts").select(SELECT).order("created_at", { ascending: false }).limit(100);
+      if (opts.authorId) q = q.eq("author_id", opts.authorId);
+      const { data } = await q;
+      rows = (data || []) as any[];
+    }
+
     const originIds = rows.map((r) => r.repost_of).filter(Boolean);
-    let originsById: Record<string, any> = {};
+    const originsById: Record<string, any> = {};
     if (originIds.length) {
       const { data: origs } = await supabase.from("posts").select(SELECT).in("id", originIds);
-      for (const o of origs || []) originsById[o.id] = o;
+      for (const o of origs || []) originsById[o.id] = { ...o, image_urls: o.image_urls || [] };
     }
 
     const ids = rows.map((r) => r.id);
@@ -33,6 +44,7 @@ export function usePosts(opts: { authorId?: string } = {}) {
     const commentCount: Record<string, number> = {};
     const repostCount: Record<string, number> = {};
     const repostedSet = new Set<string>();
+    const bookmarkedSet = new Set<string>();
 
     if (ids.length) {
       const [{ data: likes }, { data: cms }, { data: rps }] = await Promise.all([
@@ -50,21 +62,26 @@ export function usePosts(opts: { authorId?: string } = {}) {
         repostCount[r.repost_of] = (repostCount[r.repost_of] || 0) + 1;
         if (myId && r.author_id === myId && !r.is_quote) repostedSet.add(r.repost_of);
       }
+      if (myId) {
+        const { data: bms } = await supabase.from("bookmarks").select("post_id").eq("user_id", myId).in("post_id", ids);
+        for (const b of bms || []) bookmarkedSet.add(b.post_id);
+      }
     }
 
     setPosts(
       rows.map((r) => ({
         ...r,
         image_urls: r.image_urls || [],
-        original: r.repost_of ? { ...(originsById[r.repost_of] || {}), image_urls: originsById[r.repost_of]?.image_urls || [] } : null,
+        original: r.repost_of ? originsById[r.repost_of] || null : null,
         likes: likeCount[r.id] || 0,
         liked: likedSet.has(r.id),
         comments: commentCount[r.id] || 0,
         reposts: repostCount[r.id] || 0,
         reposted: repostedSet.has(r.id),
+        bookmarked: bookmarkedSet.has(r.id),
       })) as Post[]
     );
-  }, [opts.authorId]);
+  }, [opts.authorId, opts.bookmarksOnly]);
 
   const refresh = useCallback(() => load(uid), [load, uid]);
 
@@ -83,13 +100,13 @@ export function usePosts(opts: { authorId?: string } = {}) {
 
   useEffect(() => {
     const ch = supabase
-      .channel("social-" + (opts.authorId || "all"))
+      .channel("social-" + (opts.authorId || (opts.bookmarksOnly ? "bm" : "all")))
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => load(uid))
       .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, () => load(uid))
       .on("postgres_changes", { event: "*", schema: "public", table: "post_comments" }, () => load(uid))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [uid, load, opts.authorId]);
+  }, [uid, load, opts.authorId, opts.bookmarksOnly]);
 
   return { posts, uid, approved, ready, refresh };
 }
