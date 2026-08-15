@@ -115,13 +115,33 @@ export function Lightbox({ urls, index, onClose }: { urls: string[]; index: numb
       <button onClick={onClose} aria-label="Close" className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-neutral-200 transition hover:bg-white/10">x</button>
       {urls.length > 1 && (
         <>
-          <button onClick={(e) => { e.stopPropagation(); setI((v) => Math.max(v - 1, 0)); }} disabled={i === 0} aria-label="Previous" className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-lg text-neutral-200 transition hover:bg-white/10 disabled:opacity-30">{"\u2039"}</button>
-          <button onClick={(e) => { e.stopPropagation(); setI((v) => Math.min(v + 1, urls.length - 1)); }} disabled={i === urls.length - 1} aria-label="Next" className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-lg text-neutral-200 transition hover:bg-white/10 disabled:opacity-30">{"\u203A"}</button>
+          <button onClick={(e) => { e.stopPropagation(); setI((v) => Math.max(v - 1, 0)); }} disabled={i === 0} aria-label="Previous" className="absolute left-2 top-1/2 z-10 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/40 text-2xl text-white transition hover:bg-white/10 disabled:opacity-25">{"\u2039"}</button>
+          <button onClick={(e) => { e.stopPropagation(); setI((v) => Math.min(v + 1, urls.length - 1)); }} disabled={i === urls.length - 1} aria-label="Next" className="absolute right-2 top-1/2 z-10 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/40 text-2xl text-white transition hover:bg-white/10 disabled:opacity-25">{"\u203A"}</button>
         </>
       )}
       <AnimatePresence mode="wait">
-        <motion.img key={i} src={urls[i]} alt="" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.25 }} onClick={(e) => e.stopPropagation()} className="max-h-[90vh] max-w-full object-contain" />
+        <motion.img
+          key={i}
+          src={urls[i]}
+          alt=""
+          drag={urls.length > 1 ? "x" : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.25}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -60 && i < urls.length - 1) setI(i + 1);
+            else if (info.offset.x > 60 && i > 0) setI(i - 1);
+          }}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.22 }}
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[90vh] max-w-full cursor-grab object-contain active:cursor-grabbing"
+        />
       </AnimatePresence>
+      {urls.length > 1 && (
+        <p className="absolute top-6 left-1/2 -translate-x-1/2 text-xs text-white/60">{i + 1} / {urls.length}</p>
+      )}
       {urls.length > 1 && (
         <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-1.5">
           {urls.map((_, d) => (<span key={d} className="h-1.5 w-1.5 rounded-full" style={{ background: d === i ? "#fff" : "rgba(255,255,255,0.35)" }} />))}

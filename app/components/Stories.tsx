@@ -35,6 +35,7 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
   const [sent, setSent] = useState(false);
   const [paused, setPaused] = useState(false);
   const timer = useRef<any>(null);
+  const openRef = useRef<any>(null);
   const pausedRef = useRef(false);
   const pauseMs = useRef(0);
   const pauseStart = useRef(0);
@@ -60,7 +61,9 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
 
   useEffect(() => {
     const ch = supabase.channel("stories")
-      .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => {
+        if (!openRef.current) load();
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [load]);
@@ -93,18 +96,25 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
   useEffect(() => {
     if (!open) return;
     setProgress(0);
+    pauseMs.current = 0;
+    pauseStart.current = 0;
+    pausedRef.current = false;
     const started = Date.now();
+    clearInterval(timer.current);
     timer.current = setInterval(() => {
       if (pausedRef.current) return;
-      const p = Math.min((Date.now() - started - pauseMs.current) / DURATION, 1);
+      const elapsed = Date.now() - started - pauseMs.current;
+      const p = Math.max(0, Math.min(elapsed / DURATION, 1));
       setProgress(p);
-      if (p >= 1) next();
-    }, 50);
+      if (p >= 1) {
+        clearInterval(timer.current);
+        next();
+      }
+    }, 60);
     return () => clearInterval(timer.current);
-  }, [open]);
+  }, [open?.g, open?.i]);
 
   function next() {
-    clearInterval(timer.current);
     setOpen((o) => {
       if (!o) return null;
       const g = groups[o.g];
@@ -115,12 +125,14 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
   }
 
   function prev() {
-    clearInterval(timer.current);
     setOpen((o) => {
       if (!o) return null;
       if (o.i > 0) return { g: o.g, i: o.i - 1 };
-      if (o.g > 0) return { g: o.g - 1, i: 0 };
-      return o;
+      if (o.g > 0) {
+        const pg = groups[o.g - 1];
+        return { g: o.g - 1, i: Math.max(0, (pg?.items.length || 1) - 1) };
+      }
+      return { g: 0, i: 0 };
     });
   }
 
@@ -179,6 +191,7 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
   }
 
   const mineIdx = groups.findIndex((g) => g.authorId === uid);
+  openRef.current = open;
   const cur = open ? groups[open.g]?.items[open.i] : null;
 
   return (

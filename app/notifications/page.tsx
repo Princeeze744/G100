@@ -32,6 +32,7 @@ export default function NotificationsPage() {
       .limit(60);
     setRows(data || []);
     await supabase.from("notifications").update({ read: true }).eq("user_id", myId).eq("read", false);
+    window.dispatchEvent(new Event("g100-notifs-read"));
   }, []);
 
   useEffect(() => {
@@ -97,3 +98,4 @@ export default function NotificationsPage() {
     </main>
   );
 }
+

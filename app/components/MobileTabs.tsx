@@ -38,10 +38,12 @@ export default function MobileTabs() {
       setUnread(c || 0);
     };
     count();
+    const onRead = () => setUnread(0);
+    window.addEventListener("g100-notifs-read", onRead);
     const ch = supabase.channel("notif-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + uid }, count)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { supabase.removeChannel(ch); window.removeEventListener("g100-notifs-read", onRead); };
   }, [uid]);
 
   // hide chrome on scroll down, reveal on scroll up
@@ -157,4 +159,5 @@ export default function MobileTabs() {
     </>
   );
 }
+
 
