@@ -14,6 +14,7 @@ export default function MobileTabs() {
   const [uid, setUid] = useState<string | null>(null);
   const [me, setMe] = useState<any>(null);
   const [unread, setUnread] = useState(0);
+  const [dms, setDms] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
@@ -37,13 +38,25 @@ export default function MobileTabs() {
       const { count: c } = await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("read", false);
       setUnread(c || 0);
     };
+    const countDms = async () => {
+      const { data: cs } = await supabase.from("conversations").select("id").or("user_a.eq." + uid + ",user_b.eq." + uid);
+      const ids = (cs || []).map((c: any) => c.id);
+      if (!ids.length) { setDms(0); return; }
+      const { data: ms } = await supabase.from("messages").select("id, sender_id").in("conversation_id", ids).eq("read", false).neq("sender_id", uid);
+      setDms((ms || []).length);
+    };
+    countDms();
+    const dmCh = supabase.channel("dm-badge")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, countDms)
+      .subscribe();
+
     count();
     const onRead = () => setUnread(0);
     window.addEventListener("g100-notifs-read", onRead);
     const ch = supabase.channel("notif-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + uid }, count)
       .subscribe();
-    return () => { supabase.removeChannel(ch); window.removeEventListener("g100-notifs-read", onRead); };
+    return () => { supabase.removeChannel(dmCh); supabase.removeChannel(ch); window.removeEventListener("g100-notifs-read", onRead); };
   }, [uid]);
 
   // hide chrome on scroll down, reveal on scroll up
@@ -67,6 +80,7 @@ export default function MobileTabs() {
     { href: "/", label: "Home", icon: "\u2302" },
     { href: "/threads", label: "Threads", icon: "\u25C8" },
     { href: "/reels", label: "Reels", icon: "\u25B6" },
+    { href: "/messages", label: "Chats", icon: "\u2709", badge: dms },
     { href: "/notifications", label: "Alerts", icon: "\u25C9", badge: unread },
   ];
 
@@ -127,7 +141,7 @@ export default function MobileTabs() {
         transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0d0b09]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {tabs.map((t) => {
             const active = pathname === t.href || (t.href !== "/" && pathname.startsWith(t.href));
             return (
@@ -159,5 +173,7 @@ export default function MobileTabs() {
     </>
   );
 }
+
+
 
 

@@ -15,6 +15,7 @@ const LABEL: Record<string, string> = {
   quote: "quoted your post",
   mention: "mentioned you",
   comment_like: "liked your reply",
+  message: "sent you a message",
 };
 
 export default function NotificationsPage() {
@@ -87,6 +88,7 @@ export default function NotificationsPage() {
               <span className="shrink-0 text-xs text-neutral-500">{timeAgo(n.created_at)}</span>
             </motion.div>
           );
+          if (n.type === "message") return <Link key={n.id} href="/messages">{inner}</Link>;
           return n.post_id ? (
             <Link key={n.id} href={"/threads/" + n.post_id}>{inner}</Link>
           ) : (
@@ -98,4 +100,5 @@ export default function NotificationsPage() {
     </main>
   );
 }
+
 

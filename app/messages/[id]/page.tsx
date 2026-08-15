@@ -60,6 +60,7 @@ export default function ChatPage() {
     setText("");
     await supabase.from("messages").insert({ conversation_id: id, sender_id: uid, body, image_url: imageUrl || "" });
     await supabase.from("conversations").update({ last_message: body || "Photo", last_at: new Date().toISOString() }).eq("id", id);
+    if (other?.id) await supabase.from("notifications").insert({ user_id: other.id, actor_id: uid, type: "message" });
     setSending(false);
     load(uid);
   }
@@ -139,14 +140,15 @@ export default function ChatPage() {
         <div className="flex w-full items-center gap-2">
           <button onClick={() => fileRef.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-neutral-400" aria-label="Send photo">+</button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) sendImage(f); e.target.value = ""; }} />
-          <input
+          <textarea
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onFocus={() => document.body.classList.add("typing")}
+            onFocus={() => { document.body.classList.add("typing"); setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 320); }}
             onBlur={() => document.body.classList.remove("typing")}
-            onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Message..."
-            className="min-w-0 flex-1 rounded-full border border-white/15 bg-black/40 px-4 py-2.5 text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]"
+            className="max-h-32 min-h-[2.75rem] min-w-0 flex-1 resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-2.5 text-[var(--bone)] outline-none placeholder:text-neutral-500 focus:border-[var(--eye)]"
+            onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 128) + "px"; }}
           />
           <button onClick={() => send()} disabled={sending || !text.trim()} className="shrink-0 rounded-full px-5 py-2.5 font-semibold text-[var(--ink)] disabled:opacity-40" style={{ background: a }}>
             Send
@@ -156,3 +158,6 @@ export default function ChatPage() {
     </main>
   );
 }
+
+
+

@@ -98,9 +98,7 @@ export default function MessagesPage() {
     if (made?.id) router.push("/messages/" + made.id);
   }
 
-  const filtered = search.trim()
-    ? people.filter((p) => (p.full_name || "").toLowerCase().includes(search.toLowerCase()))
-    : [];
+  const filtered = search.trim() ? people.filter((p) => (p.full_name || "").toLowerCase().includes(search.toLowerCase())) : people;
 
   if (!ready) {
     return (
@@ -124,20 +122,20 @@ export default function MessagesPage() {
       />
 
       {filtered.length > 0 && (
-        <div className="mb-6 flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-2">
-          {filtered.slice(0, 6).map((p) => (
-            <button key={p.id} onClick={() => startChat(p.id)} className="flex items-center gap-3 rounded-xl p-2.5 text-left transition hover:bg-white/[0.06]">
-              <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border" style={{ borderColor: ACCENTS[p.accent || "eye"] + "88" }}>
+        <div className="mb-6">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">All Members ({filtered.length})</p>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+          {filtered.map((p) => (
+              <button key={p.id} onClick={() => startChat(p.id)} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+              <span className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: ACCENTS[p.accent || "eye"] + "aa" }}>
                 {p.photo_url ? <img src={p.photo_url} alt="" className="h-full w-full object-cover" /> : (
                   <span className="flex h-full w-full items-center justify-center bg-white/[0.06] text-xs text-neutral-300">{initials(p.full_name)}</span>
                 )}
               </span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold">{p.full_name}</span>
-                <span className="block truncate text-xs text-neutral-400">{p.role_title || "Visionary Leader"}</span>
-              </span>
+              <span className="w-full truncate text-center text-[0.62rem] text-neutral-300">{(p.full_name || "Member").split(" ")[0]}</span>
             </button>
           ))}
+        </div>
         </div>
       )}
 
@@ -177,3 +175,4 @@ export default function MessagesPage() {
     </main>
   );
 }
+
