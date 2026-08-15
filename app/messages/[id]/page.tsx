@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [ready, setReady] = useState(false);
   const [sending, setSending] = useState(false);
   const [kb, setKb] = useState(0);
+  const [replyTo, setReplyTo] = useState<any>(null);
 
   const load = useCallback(async (myId: string) => {
     const { data: c } = await supabase.from("conversations").select("user_a, user_b").eq("id", id).single();
@@ -73,7 +74,8 @@ export default function ChatPage() {
     tap();
     const body = text.trim();
     setText("");
-    await supabase.from("messages").insert({ conversation_id: id, sender_id: uid, body, image_url: imageUrl || "" });
+    await supabase.from("messages").insert({ conversation_id: id, sender_id: uid, body, image_url: imageUrl || "", reply_to: replyTo?.id || null });
+    setReplyTo(null);
     await supabase.from("conversations").update({ last_message: body || "Photo", last_at: new Date().toISOString() }).eq("id", id);
     if (other?.id) await supabase.from("notifications").insert({ user_id: other.id, actor_id: uid, type: "message" });
     setSending(false);
@@ -132,6 +134,10 @@ export default function ChatPage() {
                 initial={{ opacity: 0, y: 8, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.22 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0.2, right: 0.5 }}
+                onDragEnd={(_, info) => { if (info.offset.x > 55) { tap(); setReplyTo(m); } }}
                 className={"flex " + (mine ? "justify-end" : "justify-start")}
               >
                 <div
@@ -144,6 +150,18 @@ export default function ChatPage() {
                   {m.image_url && (
                     <img src={m.image_url} alt="" className="mb-1.5 max-h-72 w-full rounded-xl object-cover" />
                   )}
+                  {m.reply_to && (() => {
+                    const q = msgs.find((x) => x.id === m.reply_to);
+                    if (!q) return null;
+                    return (
+                      <div className="mb-2 rounded-xl border-l-2 px-2.5 py-1.5" style={{ borderColor: mine ? "rgba(13,11,9,0.5)" : a, background: mine ? "rgba(13,11,9,0.12)" : "rgba(255,255,255,0.06)" }}>
+                        <p className="text-[0.65rem] font-semibold" style={{ opacity: 0.75 }}>
+                          {q.sender_id === uid ? "You" : (other?.full_name || "Member").split(" ")[0]}
+                        </p>
+                        <p className="line-clamp-2 text-xs" style={{ opacity: 0.8 }}>{q.body || "Photo"}</p>
+                      </div>
+                    );
+                  })()}
                   {m.body && <p className="whitespace-pre-wrap text-[0.95rem] leading-relaxed">{m.body}</p>}
                   <p className="mt-1 text-right text-[0.6rem]" style={{ opacity: 0.6 }}>
                     {timeAgo(m.created_at)}{mine && m.read ? " \u00B7 seen" : ""}
@@ -158,6 +176,17 @@ export default function ChatPage() {
       </div>
 
       <div style={{ bottom: kb }} className="fixed left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-3 backdrop-blur-xl" data-kb>
+        {replyTo && (
+          <div className="mb-2 flex items-center gap-2 rounded-xl border-l-2 bg-white/[0.05] px-3 py-2" style={{ borderColor: a }}>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.65rem] font-semibold" style={{ color: a }}>
+                Replying to {replyTo.sender_id === uid ? "yourself" : (other?.full_name || "Member").split(" ")[0]}
+              </p>
+              <p className="truncate text-xs text-neutral-400">{replyTo.body || "Photo"}</p>
+            </div>
+            <button onClick={() => setReplyTo(null)} className="flex h-8 w-8 items-center justify-center text-neutral-400" aria-label="Cancel reply">x</button>
+          </div>
+        )}
         <div className="flex w-full items-center gap-2">
           <button onClick={() => fileRef.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-neutral-400" aria-label="Send photo">+</button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) sendImage(f); e.target.value = ""; }} />
@@ -179,6 +208,7 @@ export default function ChatPage() {
     </main>
   );
 }
+
 
 
 
