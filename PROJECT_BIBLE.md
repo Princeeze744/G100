@@ -170,3 +170,17 @@ G100 120 pts | 2nd 100 | 3rd 80 | 4th 60.
 Delivered what judges asked: feed, posts, reactions, comments, chat-like threads.
 Still wanted: 24h Stories, multi-photo profiles, richer profile fields
 (hobbies/fav place/fav dish), per-post OG link previews, push notifications.
+
+## BATCH A+B (built)
+- Quote posts render full original (avatar, name, role, body, images), clickable.
+- Reposts appear on reposter profile with "reposted" attribution line.
+- Avatars link to /member/[id] everywhere incl. composer.
+- MobileTabs.tsx: bottom tab bar (sm:hidden) Home/Threads/Alerts/You + live
+  unread badge. Mounted in layout.
+- /notifications: like, comment, repost, quote, mention alerts. Realtime.
+  Auto-marks read on view. notifications table.
+- @mentions: notifyMentions() matches @handle to profile names, notifies,
+  renders amber via <Body>.
+- /bookmarks: private saved posts. bookmarks table. Star toggle on PostCard.
+- lib/social.ts now exports notify(), notifyMentions(), Body renderer.
+- usePosts({ authorId, bookmarksOnly }).
