@@ -21,7 +21,6 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [ready, setReady] = useState(false);
   const [sending, setSending] = useState(false);
-  const [kb, setKb] = useState(0);
   const [replyTo, setReplyTo] = useState<any>(null);
 
   const load = useCallback(async (myId: string) => {
@@ -52,19 +51,6 @@ export default function ChatPage() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [uid, id, load]);
-
-  useEffect(() => {
-    const vv = (window as any).visualViewport;
-    if (!vv) return;
-    const onResize = () => {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      setKb(offset);
-      if (offset > 0) setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 60);
-    };
-    vv.addEventListener("resize", onResize);
-    vv.addEventListener("scroll", onResize);
-    return () => { vv.removeEventListener("resize", onResize); vv.removeEventListener("scroll", onResize); };
-  }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 
@@ -124,7 +110,7 @@ export default function ChatPage() {
         </Link>
       </div>
 
-      <div style={{ paddingBottom: 120 + kb }} className="flex flex-1 flex-col gap-2 px-4 pt-24 sm:pt-40">
+      <div className="flex flex-1 flex-col gap-2 px-4 pb-40 pt-24 sm:pt-40">
         <AnimatePresence initial={false}>
           {msgs.map((m) => {
             const mine = m.sender_id === uid;
@@ -175,7 +161,7 @@ export default function ChatPage() {
         <div ref={endRef} />
       </div>
 
-      <div style={{ bottom: kb }} className="fixed left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-3 backdrop-blur-xl" data-kb>
+      <div className="fixed bottom-0 left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-3 backdrop-blur-xl" data-kb>
         {replyTo && (
           <div className="mb-2 flex items-center gap-2 rounded-xl border-l-2 bg-white/[0.05] px-3 py-2" style={{ borderColor: a }}>
             <div className="min-w-0 flex-1">
@@ -208,6 +194,7 @@ export default function ChatPage() {
     </main>
   );
 }
+
 
 
 

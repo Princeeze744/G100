@@ -19,6 +19,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover" as const,
+  interactiveWidget: "resizes-content" as const,
   themeColor: "#0d0b09",
 };
 
@@ -55,6 +56,7 @@ export default function RootLayout({
     </html>
   );
 }
+
 
 
 
