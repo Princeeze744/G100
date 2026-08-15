@@ -71,6 +71,12 @@ export default function MemberClient() {
         </div>
       )}
 
+      {uid === id && (
+        <a href="/profile" className="mt-6 inline-block rounded-full border border-white/25 px-6 py-2.5 text-sm font-semibold text-[var(--bone)] transition hover:border-[var(--eye)]">
+          Edit Profile
+        </a>
+      )}
+
       {uid && uid !== id && (
         <button
           onClick={async () => {
@@ -108,5 +114,6 @@ export default function MemberClient() {
     </main>
   );
 }
+
 
 

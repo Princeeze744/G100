@@ -46,6 +46,8 @@ export default function MobileTabs() {
       setDms((ms || []).length);
     };
     countDms();
+    const onDmRead = () => { setDms(0); setTimeout(countDms, 900); };
+    window.addEventListener("g100-dm-read", onDmRead);
     const dmCh = supabase.channel("dm-badge")
       .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, countDms)
       .subscribe();
@@ -56,7 +58,7 @@ export default function MobileTabs() {
     const ch = supabase.channel("notif-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + uid }, count)
       .subscribe();
-    return () => { supabase.removeChannel(dmCh); supabase.removeChannel(ch); window.removeEventListener("g100-notifs-read", onRead); };
+    return () => { window.removeEventListener("g100-dm-read", onDmRead); supabase.removeChannel(dmCh); supabase.removeChannel(ch); window.removeEventListener("g100-notifs-read", onRead); };
   }, [uid]);
 
   // hide chrome on scroll down, reveal on scroll up
@@ -75,6 +77,7 @@ export default function MobileTabs() {
 
   const accent = ACCENTS[me?.accent || "eye"];
   const showFab = pathname === "/threads";
+  const inChat = pathname.startsWith("/messages/");
 
   const tabs = [
     { href: "/", label: "Home", icon: "\u2302" },
@@ -89,6 +92,7 @@ export default function MobileTabs() {
       <SideDrawer open={drawer} onClose={() => setDrawer(false)} />
 
       {/* slim top bar */}
+      {!inChat && (
       <motion.header
         animate={{ y: hidden ? -70 : 0 }}
         transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
@@ -110,6 +114,7 @@ export default function MobileTabs() {
           {"\u2606"}
         </Link>
       </motion.header>
+      )}
 
       {/* compose FAB */}
       <AnimatePresence>
@@ -135,7 +140,7 @@ export default function MobileTabs() {
         )}
       </AnimatePresence>
 
-      {/* bottom tabs */}
+{!inChat && (
       <motion.nav
         animate={{ y: hidden ? 90 : 0 }}
         transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
@@ -170,9 +175,12 @@ export default function MobileTabs() {
           </button>
         </div>
       </motion.nav>
+      )}
     </>
   );
 }
+
+
 
 
 

@@ -97,7 +97,7 @@ export default function ReelsPage() {
   }
 
   if (!ready) {
-    return <main className="flex h-screen items-center justify-center bg-black"><p className="text-neutral-500">Loading Reels...</p></main>;
+    return <main className="h-screen animate-pulse bg-black" />;
   }
 
   if (reels.length === 0) {
@@ -167,3 +167,4 @@ export default function ReelsPage() {
     </div>
   );
 }
+

@@ -32,6 +32,7 @@ export default function ChatPage() {
     const { data: ms } = await supabase.from("messages").select("*").eq("conversation_id", id).order("created_at", { ascending: true });
     setMsgs(ms || []);
     await supabase.from("messages").update({ read: true }).eq("conversation_id", id).neq("sender_id", myId).eq("read", false);
+    window.dispatchEvent(new Event("g100-dm-read"));
   }, [id, router]);
 
   useEffect(() => {
@@ -95,7 +96,13 @@ export default function ChatPage() {
   const a = ACCENTS[other?.accent || "eye"];
 
   if (!ready) {
-    return <main className="flex min-h-screen items-center justify-center"><p className="text-neutral-400">Opening chat...</p></main>;
+    return (
+      <main className="mx-auto max-w-xl px-4 pt-24">
+        <div className="mb-4 h-12 animate-pulse rounded-2xl bg-white/5" />
+        <div className="ml-auto mb-3 h-14 w-2/3 animate-pulse rounded-2xl bg-white/5" />
+        <div className="mb-3 h-14 w-1/2 animate-pulse rounded-2xl bg-white/5" />
+      </main>
+    );
   }
 
   return (
@@ -172,6 +179,8 @@ export default function ChatPage() {
     </main>
   );
 }
+
+
 
 
 
