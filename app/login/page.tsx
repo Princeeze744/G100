@@ -66,6 +66,10 @@ export default function LoginPage() {
         </button>
       </div>
 
+      <Link href="/forgot-password" className="mt-4 block text-sm text-neutral-400 transition hover:text-[var(--eye)]">
+        Forgot your password?
+      </Link>
+
       <p className="mt-6 text-sm text-neutral-400">
         New to the family?{" "}
         <Link href="/join" className="text-[var(--eye)]">
@@ -75,6 +79,7 @@ export default function LoginPage() {
     </AuthShell>
   );
 }
+
 
 
 
