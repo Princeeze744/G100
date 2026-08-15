@@ -64,6 +64,7 @@ export default function MobileTabs() {
   const tabs = [
     { href: "/", label: "Home", icon: "\u2302" },
     { href: "/threads", label: "Threads", icon: "\u25C8" },
+    { href: "/reels", label: "Reels", icon: "\u25B6" },
     { href: "/notifications", label: "Alerts", icon: "\u25C9", badge: unread },
   ];
 
@@ -124,7 +125,7 @@ export default function MobileTabs() {
         transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0d0b09]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
       >
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {tabs.map((t) => {
             const active = pathname === t.href || (t.href !== "/" && pathname.startsWith(t.href));
             return (
@@ -156,3 +157,4 @@ export default function MobileTabs() {
     </>
   );
 }
+

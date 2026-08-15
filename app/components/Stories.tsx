@@ -28,7 +28,16 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
   const [open, setOpen] = useState<{ g: number; i: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [viewCount, setViewCount] = useState(0);
+  const [reply, setReply] = useState("");
+  const [sent, setSent] = useState(false);
+  const [paused, setPaused] = useState(false);
   const timer = useRef<any>(null);
+  const pausedRef = useRef(false);
+  const pauseMs = useRef(0);
+  const pauseStart = useRef(0);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -58,11 +67,36 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
 
   // auto-advance
   useEffect(() => {
+    pausedRef.current = paused;
+    if (paused) pauseStart.current = Date.now();
+    else if (pauseStart.current) { pauseMs.current += Date.now() - pauseStart.current; pauseStart.current = 0; }
+  }, [paused]);
+
+  useEffect(() => {
+    if (!open) return;
+    const st = groups[open.g]?.items[open.i];
+    if (!st) return;
+    setReply(""); setSent(false); setPaused(false);
+    pauseMs.current = 0; pauseStart.current = 0;
+    (async () => {
+      const { data: ls } = await supabase.from("story_likes").select("user_id").eq("story_id", st.id);
+      setLikeCount((ls || []).length);
+      setLiked(!!(uid && (ls || []).some((l: any) => l.user_id === uid)));
+      const { data: vs } = await supabase.from("story_views").select("user_id").eq("story_id", st.id);
+      setViewCount((vs || []).length);
+      if (uid && st.author_id !== uid) {
+        await supabase.from("story_views").upsert({ story_id: st.id, user_id: uid }, { onConflict: "story_id,user_id" });
+      }
+    })();
+  }, [open, uid]);
+
+  useEffect(() => {
     if (!open) return;
     setProgress(0);
     const started = Date.now();
     timer.current = setInterval(() => {
-      const p = Math.min((Date.now() - started) / DURATION, 1);
+      if (pausedRef.current) return;
+      const p = Math.min((Date.now() - started - pauseMs.current) / DURATION, 1);
       setProgress(p);
       if (p >= 1) next();
     }, 50);
@@ -88,6 +122,32 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
       if (o.g > 0) return { g: o.g - 1, i: 0 };
       return o;
     });
+  }
+
+  async function likeStory(st: Story) {
+    if (!uid) return;
+    tap();
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((c) => c + (next ? 1 : -1));
+    if (next) await supabase.from("story_likes").insert({ story_id: st.id, user_id: uid });
+    else await supabase.from("story_likes").delete().eq("story_id", st.id).eq("user_id", uid);
+  }
+
+  async function sendReply(st: Story) {
+    if (!uid || !reply.trim()) return;
+    tap();
+    await supabase.from("story_replies").insert({ story_id: st.id, author_id: uid, body: reply.trim() });
+    setReply("");
+    setSent(true);
+    setTimeout(() => setSent(false), 1800);
+  }
+
+  async function shareStory(st: Story) {
+    const url = window.location.origin + "/threads";
+    const text = (st.caption || "A story from G100");
+    if (navigator.share) { try { await navigator.share({ title: "G100", text, url }); } catch {} }
+    else window.open("https://wa.me/?text=" + encodeURIComponent(text + " - " + url), "_blank");
   }
 
   async function uploadMany(list: FileList) {
@@ -218,8 +278,34 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
                   </p>
                 </div>
               )}
-              <button onClick={prev} className="absolute bottom-0 left-0 top-0 w-1/3" aria-label="Previous" />
-              <button onClick={next} className="absolute bottom-0 right-0 top-0 w-1/3" aria-label="Next" />
+              <button onClick={prev} onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)} className="absolute bottom-24 left-0 top-0 w-1/3" aria-label="Previous" />
+              <button onClick={next} onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)} className="absolute bottom-24 right-0 top-0 w-1/3" aria-label="Next" />
+            </div>
+
+            <div className="px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+              {cur.author_id === uid ? (
+                <div className="flex items-center gap-5 text-sm text-white/70">
+                  <span>{"\u25C9"} Seen by {viewCount}</span>
+                  <span style={{ color: likeCount > 0 ? "#e2603a" : undefined }}>{"\u2665"} {likeCount}</span>
+                  <button onClick={() => shareStory(cur)} className="ml-auto flex h-11 w-11 items-center justify-center text-xl">{"\u21AA"}</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    onFocus={() => setPaused(true)}
+                    onBlur={() => setPaused(false)}
+                    onKeyDown={(e) => e.key === "Enter" && sendReply(cur)}
+                    placeholder={sent ? "Sent!" : "Reply to " + (cur.author?.full_name || "story").split(" ")[0] + "..."}
+                    className="h-11 flex-1 rounded-full border border-white/30 bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/50 focus:border-white/60"
+                  />
+                  <button onClick={() => likeStory(cur)} aria-label="Like story" className="flex h-11 w-11 items-center justify-center text-2xl" style={{ color: liked ? "#e2603a" : "#fff" }}>
+                    {liked ? "\u2665" : "\u2661"}
+                  </button>
+                  <button onClick={() => shareStory(cur)} aria-label="Share story" className="flex h-11 w-11 items-center justify-center text-xl text-white">{"\u21AA"}</button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
