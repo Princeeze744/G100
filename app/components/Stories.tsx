@@ -90,6 +90,10 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
     });
   }
 
+  async function uploadMany(list: FileList) {
+    for (const f of Array.from(list)) await upload(f);
+  }
+
   async function upload(file: File) {
     if (!uid) return;
     setUploading(true);
@@ -102,42 +106,56 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
     const { error } = await supabase.storage.from("posts").upload(path, blob, { contentType: isVideo ? file.type : "image/jpeg" });
     if (!error) {
       const url = supabase.storage.from("posts").getPublicUrl(path).data.publicUrl;
+      const cap = typeof window !== "undefined" ? (window.prompt("Add a caption (optional)") || "") : "";
       await supabase.from("stories").insert({
         author_id: uid,
         image_url: isVideo ? "" : url,
         video_url: isVideo ? url : "",
+        caption: cap,
       });
       await load();
     }
     setUploading(false);
   }
 
-  const mine = groups.find((g) => g.authorId === uid);
+  const mineIdx = groups.findIndex((g) => g.authorId === uid);
   const cur = open ? groups[open.g]?.items[open.i] : null;
 
   return (
     <>
       <div className="mb-6 flex gap-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         {uid && (
-          <button onClick={() => fileRef.current?.click()} className="flex shrink-0 flex-col items-center gap-1.5" aria-label="Add story">
-            <span className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-dashed" style={{ borderColor: ACCENTS[me?.accent || "eye"] + "88" }}>
-              {me?.photo_url ? (
-                <img src={me.photo_url} alt="" className="h-full w-full object-cover opacity-60" />
-              ) : (
-                <span className="text-xs text-neutral-400">{initials(me?.full_name)}</span>
-              )}
-              <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full text-sm font-bold text-[var(--ink)]" style={{ background: ACCENTS[me?.accent || "eye"] }}>
-                {uploading ? "\u00B7\u00B7" : "+"}
+          <div className="relative flex shrink-0 flex-col items-center gap-1.5">
+            <button
+              onClick={() => { tap(); if (mineIdx >= 0) setOpen({ g: mineIdx, i: 0 }); else fileRef.current?.click(); }}
+              aria-label={mineIdx >= 0 ? "View your story" : "Add story"}
+              className="relative flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full p-[2.5px]"
+              style={{ background: mineIdx >= 0 ? "linear-gradient(135deg, " + ACCENTS[me?.accent || "eye"] + ", var(--ember))" : "transparent", border: mineIdx >= 0 ? "none" : "2px dashed " + ACCENTS[me?.accent || "eye"] + "66" }}
+            >
+              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-[#0d0b09]">
+                {me?.photo_url ? (
+                  <img src={me.photo_url} alt="" className="h-full w-full object-cover" style={{ opacity: mineIdx >= 0 ? 1 : 0.7 }} />
+                ) : (
+                  <span className="text-xs text-neutral-400">{initials(me?.full_name)}</span>
+                )}
               </span>
-            </span>
+            </button>
+            <button
+              onClick={() => { tap(); fileRef.current?.click(); }}
+              aria-label="Add to your story"
+              className="absolute right-0 top-[2.9rem] flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#0d0b09] text-sm font-bold text-[var(--ink)]"
+              style={{ background: ACCENTS[me?.accent || "eye"] }}
+            >
+              {uploading ? "\u00B7\u00B7" : "+"}
+            </button>
             <span className="text-[0.65rem] text-neutral-400">Your story</span>
-          </button>
+          </div>
         )}
-        <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
+        <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" multiple onChange={(e) => { if (e.target.files?.length) uploadMany(e.target.files); e.target.value = ""; }} />
 
         {groups.map((g, gi) => {
           const a = ACCENTS[g.author?.accent || "eye"];
-          if (g.authorId === uid && !g.items.length) return null;
+          if (g.authorId === uid) return null;
           return (
             <button key={g.authorId} onClick={() => { tap(); setOpen({ g: gi, i: 0 }); }} className="flex shrink-0 flex-col items-center gap-1.5">
               <span className="flex h-16 w-16 items-center justify-center rounded-full p-[2.5px]" style={{ background: "linear-gradient(135deg, " + a + ", var(--ember))" }}>
@@ -192,6 +210,13 @@ export default function Stories({ uid, me }: { uid: string | null; me: any }) {
                 <video src={cur.video_url} autoPlay playsInline controls className="max-h-full max-w-full" />
               ) : (
                 <img src={cur.image_url} alt="" className="max-h-full max-w-full object-contain" />
+              )}
+              {cur.caption && (
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 pb-24 pt-20" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }}>
+                  <p className="px-6 text-center text-lg font-semibold leading-snug text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
+                    {cur.caption}
+                  </p>
+                </div>
               )}
               <button onClick={prev} className="absolute bottom-0 left-0 top-0 w-1/3" aria-label="Previous" />
               <button onClick={next} className="absolute bottom-0 right-0 top-0 w-1/3" aria-label="Next" />

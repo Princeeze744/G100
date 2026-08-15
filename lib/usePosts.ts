@@ -5,7 +5,7 @@ import { supabase } from "./supabaseClient";
 import { Post } from "./social";
 
 const SELECT =
-  "id, author_id, body, image_urls, created_at, repost_of, is_quote, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)";
+  "id, author_id, body, image_urls, video_url, created_at, repost_of, is_quote, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)";
 
 export function usePosts(opts: { authorId?: string; bookmarksOnly?: boolean } = {}) {
   const [posts, setPosts] = useState<Post[]>([]);

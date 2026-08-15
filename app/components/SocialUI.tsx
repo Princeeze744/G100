@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
-import { tap } from "../../lib/haptic";
-import { useToast } from "./Toast";
 import { ACCENTS, EASE, timeAgo, initials, notify, notifyMentions, Post } from "../../lib/social";
 
 export function Avatar({ url, name, accent, size, href }: { url?: string; name?: string; accent: string; size: number; href?: string }) {
@@ -140,17 +138,6 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
   const [quoteText, setQuoteText] = useState("");
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(p.body);
-  const toast = useToast();
-  const [oLiked, setOLiked] = useState<boolean | null>(null);
-  const [oLikes, setOLikes] = useState<number | null>(null);
-  const [oBook, setOBook] = useState<boolean | null>(null);
-  const [oRep, setORep] = useState<boolean | null>(null);
-  const [oReps, setOReps] = useState<number | null>(null);
-  const liked = oLiked === null ? p.liked : oLiked;
-  const likes = oLikes === null ? p.likes : oLikes;
-  const booked = oBook === null ? !!p.bookmarked : oBook;
-  const reposted = oRep === null ? p.reposted : oRep;
-  const reposts = oReps === null ? p.reposts : oReps;
   const hot = p.likes + p.reposts >= 4;
 
   const isPlainRepost = !!p.repost_of && !p.is_quote;
@@ -162,38 +149,31 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
 
   async function like() {
     if (!uid || !approved) return;
-    tap();
-    const next = !liked;
-    setOLiked(next);
-    setOLikes(likes + (next ? 1 : -1));
-    if (!next) await supabase.from("post_likes").delete().eq("post_id", p.id).eq("user_id", uid);
-    else {
+    if (p.liked) {
+      await supabase.from("post_likes").delete().eq("post_id", p.id).eq("user_id", uid);
+    } else {
       await supabase.from("post_likes").insert({ post_id: p.id, user_id: uid });
-      notify({ userId: p.author_id, actorId: uid, type: "like", postId: p.id });
+      await notify({ userId: p.author_id, actorId: uid, type: "like", postId: p.id });
     }
+    onChanged();
   }
 
   async function repost() {
     if (!uid || !approved) return;
-    tap();
-    const next = !reposted;
-    setORep(next);
-    setOReps(reposts + (next ? 1 : -1));
-    if (!next) await supabase.from("posts").delete().eq("author_id", uid).eq("repost_of", p.id).eq("is_quote", false);
-    else {
+    if (p.reposted) {
+      await supabase.from("posts").delete().eq("author_id", uid).eq("repost_of", p.id).eq("is_quote", false);
+    } else {
       await supabase.from("posts").insert({ author_id: uid, body: "", image_urls: [], repost_of: p.id, is_quote: false });
-      notify({ userId: p.author_id, actorId: uid, type: "repost", postId: p.id });
+      await notify({ userId: p.author_id, actorId: uid, type: "repost", postId: p.id });
     }
+    onChanged();
   }
 
   async function bookmark() {
     if (!uid) return;
-    tap();
-    const next = !booked;
-    setOBook(next);
-    toast(next ? "Added to Bookmarks" : "Removed from Bookmarks");
-    if (!next) await supabase.from("bookmarks").delete().eq("user_id", uid).eq("post_id", p.id);
+    if (p.bookmarked) await supabase.from("bookmarks").delete().eq("user_id", uid).eq("post_id", p.id);
     else await supabase.from("bookmarks").insert({ user_id: uid, post_id: p.id });
+    onChanged();
   }
 
   async function sendQuote() {
@@ -278,6 +258,12 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
           </Link>
         )}
 
+        {(src as any).video_url ? (
+          <div className="mt-3 overflow-hidden rounded-2xl border border-white/5 bg-black">
+            <video src={(src as any).video_url} controls playsInline preload="metadata" className="max-h-[70vh] w-full" />
+          </div>
+        ) : null}
+
         <PostImages urls={src.image_urls || []} onOpen={(i) => setBox({ urls: (src.image_urls || []).filter(Boolean), index: i })} />
 
         {p.is_quote && orig && (
@@ -305,17 +291,17 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
             <span className="text-base">{"\u{1F4AC}"}</span>
             <span className="text-sm tabular-nums">{p.comments}</span>
           </Link>
-          <button onClick={repost} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: reposted ? "#3dbfb0" : "var(--smoke)" }} aria-label="Repost">
+          <button onClick={repost} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.reposted ? "#3dbfb0" : "var(--smoke)" }} aria-label="Repost">
             <span className="text-lg">{"\u21BB"}</span>
-            <span className="text-sm tabular-nums">{reposts}</span>
+            <span className="text-sm tabular-nums">{p.reposts}</span>
           </button>
-          <button onClick={like} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: liked ? a : "var(--smoke)" }} aria-label="Like">
-            <span className="text-lg">{liked ? "\u2665" : "\u2661"}</span>
-            <span className="text-sm tabular-nums">{likes}</span>
+          <button onClick={like} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.liked ? a : "var(--smoke)" }} aria-label="Like">
+            <span className="text-lg">{p.liked ? "\u2665" : "\u2661"}</span>
+            <span className="text-sm tabular-nums">{p.likes}</span>
           </button>
           <button onClick={() => setQuoteOpen((q) => !q)} disabled={!approved} className="flex h-11 min-w-11 items-center justify-center rounded-full px-3 text-xs text-neutral-400 transition hover:bg-white/[0.06] hover:text-[var(--bone)] disabled:opacity-50" aria-label="Quote">Quote</button>
-          <button onClick={bookmark} disabled={!uid} className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: booked ? "#e8a33d" : "var(--smoke)" }} aria-label="Bookmark">
-            <span className="text-lg">{booked ? "\u2605" : "\u2606"}</span>
+          <button onClick={bookmark} disabled={!uid} className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-white/[0.06] disabled:opacity-50" style={{ color: p.bookmarked ? "#e8a33d" : "var(--smoke)" }} aria-label="Bookmark">
+            <span className="text-lg">{p.bookmarked ? "\u2605" : "\u2606"}</span>
           </button>
           <button onClick={share} className="flex h-11 w-11 items-center justify-center rounded-full text-neutral-400 transition hover:bg-white/[0.06] hover:text-[var(--bone)]" aria-label="Share">
             <span className="text-lg">{"\u21AA"}</span>
@@ -336,5 +322,3 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
     </>
   );
 }
-
-
