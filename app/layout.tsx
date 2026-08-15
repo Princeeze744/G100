@@ -3,6 +3,7 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "./components/SmoothScroll";
 import Navbar from "./components/Navbar";
+import { ToastProvider } from "./components/Toast";
 import MobileTabs from "./components/MobileTabs";
 import InstallPrompt from "./components/InstallPrompt";
 import SWRegister from "./components/SWRegister";
@@ -33,16 +34,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${spaceGrotesk.variable} font-sans`}>
+        <ToastProvider>
         <SmoothScroll />
         <Navbar />
         <MobileTabs />
         <InstallPrompt />
         <SWRegister />
         {children}
+        </ToastProvider>
       </body>
     </html>
   );
 }
+
 
 
 

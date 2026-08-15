@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
 import { tap } from "../../lib/haptic";
+import { useToast } from "./Toast";
 import { ACCENTS, EASE, timeAgo, initials, notify, notifyMentions, Post } from "../../lib/social";
 
 export function Avatar({ url, name, accent, size, href }: { url?: string; name?: string; accent: string; size: number; href?: string }) {
@@ -139,6 +140,7 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
   const [quoteText, setQuoteText] = useState("");
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(p.body);
+  const toast = useToast();
   const [oLiked, setOLiked] = useState<boolean | null>(null);
   const [oLikes, setOLikes] = useState<number | null>(null);
   const [oBook, setOBook] = useState<boolean | null>(null);
@@ -189,6 +191,7 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
     tap();
     const next = !booked;
     setOBook(next);
+    toast(next ? "Added to Bookmarks" : "Removed from Bookmarks");
     if (!next) await supabase.from("bookmarks").delete().eq("user_id", uid).eq("post_id", p.id);
     else await supabase.from("bookmarks").insert({ user_id: uid, post_id: p.id });
   }
@@ -333,4 +336,5 @@ export function PostCard({ p, uid, approved, onChanged }: { p: Post; uid: string
     </>
   );
 }
+
 
