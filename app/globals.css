@@ -95,3 +95,6 @@ video {
   background: #14100c;
   border-radius: 1rem;
 }
+
+/* snappier page transitions */
+main { will-change: auto; }

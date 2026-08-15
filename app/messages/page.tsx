@@ -18,8 +18,8 @@ type Row = {
 export default function MessagesPage() {
   const router = useRouter();
   const [uid, setUid] = useState<string | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
-  const [ready, setReady] = useState(false);
+  const [rows, setRows] = useState<Row[]>(typeof window !== "undefined" && (window as any).__g100dm ? (window as any).__g100dm : []);
+  const [ready, setReady] = useState(typeof window !== "undefined" && !!(window as any).__g100dm);
   const [search, setSearch] = useState("");
   const [people, setPeople] = useState<any[]>([]);
 
@@ -54,13 +54,15 @@ export default function MessagesPage() {
       }
     }
 
-    setRows(list.map((c: any) => ({
+    const out = (list.map((c: any) => ({
       id: c.id,
       other: profs[c.user_a === myId ? c.user_b : c.user_a],
       last_message: c.last_message,
       last_at: c.last_at,
       unread: unreadBy[c.id] || 0,
     })));
+    (window as any).__g100dm = out;
+    setRows(out);
   }, []);
 
   useEffect(() => {
@@ -175,4 +177,5 @@ export default function MessagesPage() {
     </main>
   );
 }
+
 

@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [ready, setReady] = useState(false);
   const [sending, setSending] = useState(false);
+  const [kb, setKb] = useState(0);
 
   const load = useCallback(async (myId: string) => {
     const { data: c } = await supabase.from("conversations").select("user_a, user_b").eq("id", id).single();
@@ -49,6 +50,19 @@ export default function ChatPage() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [uid, id, load]);
+
+  useEffect(() => {
+    const vv = (window as any).visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKb(offset);
+      if (offset > 0) setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 60);
+    };
+    vv.addEventListener("resize", onResize);
+    vv.addEventListener("scroll", onResize);
+    return () => { vv.removeEventListener("resize", onResize); vv.removeEventListener("scroll", onResize); };
+  }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 
@@ -101,7 +115,7 @@ export default function ChatPage() {
         </Link>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 px-4 pb-32 pt-24 sm:pt-40">
+      <div style={{ paddingBottom: 120 + kb }} className="flex flex-1 flex-col gap-2 px-4 pt-24 sm:pt-40">
         <AnimatePresence initial={false}>
           {msgs.map((m) => {
             const mine = m.sender_id === uid;
@@ -136,7 +150,7 @@ export default function ChatPage() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-0 left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl">
+      <div style={{ bottom: kb }} className="fixed left-1/2 z-[60] w-full max-w-xl -translate-x-1/2 border-t border-white/10 bg-[#0d0b09]/98 p-3 backdrop-blur-xl" data-kb>
         <div className="flex w-full items-center gap-2">
           <button onClick={() => fileRef.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl text-neutral-400" aria-label="Send photo">+</button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) sendImage(f); e.target.value = ""; }} />
@@ -158,6 +172,7 @@ export default function ChatPage() {
     </main>
   );
 }
+
 
 
 

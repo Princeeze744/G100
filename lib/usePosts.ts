@@ -4,23 +4,31 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 import { Post } from "./social";
 
+// In-memory cache so returning to a page renders instantly
+const CACHE: Record<string, Post[]> = {};
+
 const SELECT =
   "id, author_id, body, image_urls, video_url, created_at, repost_of, is_quote, author:profiles!posts_author_id_fkey(full_name, photo_url, accent, role_title)";
 
 export function usePosts(opts: { authorId?: string; bookmarksOnly?: boolean } = {}) {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const key = opts.authorId || (opts.bookmarksOnly ? "bm" : "all");
+  const [posts, setPosts] = useState<Post[]>(CACHE[key] || []);
   const [uid, setUid] = useState<string | null>(null);
   const [approved, setApproved] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(!!CACHE[key]);
 
   const load = useCallback(async (myId: string | null) => {
     let rows: any[] = [];
 
     if (opts.bookmarksOnly) {
       if (!myId) { setPosts([]); return; }
-      const { data: bms } = await supabase.from("bookmarks").select("post_id").eq("user_id", myId).order("created_at", { ascending: false });
+      const { data: bms } = await supabase
+        .from("bookmarks")
+        .select("post_id")
+        .eq("user_id", myId)
+        .order("created_at", { ascending: false });
       const ids = (bms || []).map((b: any) => b.post_id);
-      if (ids.length === 0) { setPosts([]); return; }
+      if (ids.length === 0) { CACHE[key] = []; setPosts([]); return; }
       const { data } = await supabase.from("posts").select(SELECT).in("id", ids);
       rows = (data || []) as any[];
       rows.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
@@ -68,20 +76,21 @@ export function usePosts(opts: { authorId?: string; bookmarksOnly?: boolean } = 
       }
     }
 
-    setPosts(
-      rows.map((r) => ({
-        ...r,
-        image_urls: r.image_urls || [],
-        original: r.repost_of ? originsById[r.repost_of] || null : null,
-        likes: likeCount[r.id] || 0,
-        liked: likedSet.has(r.id),
-        comments: commentCount[r.id] || 0,
-        reposts: repostCount[r.id] || 0,
-        reposted: repostedSet.has(r.id),
-        bookmarked: bookmarkedSet.has(r.id),
-      })) as Post[]
-    );
-  }, [opts.authorId, opts.bookmarksOnly]);
+    const built = rows.map((r) => ({
+      ...r,
+      image_urls: r.image_urls || [],
+      original: r.repost_of ? originsById[r.repost_of] || null : null,
+      likes: likeCount[r.id] || 0,
+      liked: likedSet.has(r.id),
+      comments: commentCount[r.id] || 0,
+      reposts: repostCount[r.id] || 0,
+      reposted: repostedSet.has(r.id),
+      bookmarked: bookmarkedSet.has(r.id),
+    })) as Post[];
+
+    CACHE[key] = built;
+    setPosts(built);
+  }, [opts.authorId, opts.bookmarksOnly, key]);
 
   const refresh = useCallback(() => load(uid), [load, uid]);
 
@@ -100,13 +109,13 @@ export function usePosts(opts: { authorId?: string; bookmarksOnly?: boolean } = 
 
   useEffect(() => {
     const ch = supabase
-      .channel("social-" + (opts.authorId || (opts.bookmarksOnly ? "bm" : "all")))
+      .channel("social-" + key)
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => load(uid))
       .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, () => load(uid))
       .on("postgres_changes", { event: "*", schema: "public", table: "post_comments" }, () => load(uid))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [uid, load, opts.authorId, opts.bookmarksOnly]);
+  }, [uid, load, key]);
 
   return { posts, uid, approved, ready, refresh };
 }
