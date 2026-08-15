@@ -206,3 +206,28 @@ tablename in (...) group by tablename;
 ## COMPETITION (day 6): G100 222 | 2nd 155 | 3rd 123 | 4th 100
 ## REMAINING: 24h Stories (SQL already run, UI not built), richer profiles
 ## (hobbies/fav place/dish), multi-photo profiles, per-post OG previews.
+
+## STORIES + REELS (built)
+Stories.tsx: ring tray on /threads (own ring = gradient when active + separate
+"+" badge), full-screen player with per-story progress bars, 5s auto-advance,
+tap L/R to navigate, HOLD to pause, captions (prompted on upload, rendered in
+central safe zone over dark gradient), multi-file upload, photo AND video.
+Story likes (story_likes), replies (story_replies -> private to owner),
+views (story_views -> "Seen by N" on your own). 24h auto-expiry via expires_at.
+CRITICAL: timer must be keyed to [open?.g, open?.i] and groups must NOT reload
+while player is open (openRef guard) or playback loops backwards.
+
+/reels: full-screen vertical snap-scroll feed of every post with video_url.
+IntersectionObserver autoplay/pause, tap to toggle mute, right rail
+(like/comments/share/mute), author + caption over bottom gradient.
+Any video posted to Threads appears here automatically (Instagram model).
+
+Lightbox: swipe (framer drag) + big 56px arrows + "n / total" counter.
+
+NOTIFICATIONS BEHAVIOUR (by design): only for actions involving YOU -
+likes/comments/reposts/quotes on your posts, and @mentions. NOT for every new
+post (would spam 100 members). Badge clears via "g100-notifs-read" window event.
+
+OG PREVIEWS: /threads/[id] and /member/[id] are server components exporting
+generateMetadata() that fetch from Supabase; the interactive UI lives in
+ThreadClient.tsx / MemberClient.tsx. Shared links show real post image + text.
