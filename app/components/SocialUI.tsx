@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabaseClient";
-import { ACCENTS, EASE, timeAgo, initials, Post } from "../../lib/social";
+import { ACCENTS, EASE, timeAgo, initials, Author, Post } from "../../lib/social";
 
 export function Avatar({ url, name, accent, size, href }: { url?: string; name?: string; accent: string; size: number; href?: string }) {
   const inner = (
@@ -114,25 +114,17 @@ export function Lightbox({ urls, index, onClose }: { urls: string[]; index: numb
   );
 }
 
+// ---------------- POST CARD ----------------
 export function PostCard({
-  p, uid, approved, onChanged, embedded,
+  p, uid, approved, onChanged, showThread, embedded,
 }: {
-  p: Post; uid: string | null; approved: boolean; onChanged: () => void; embedded?: boolean;
+  p: Post; uid: string | null; approved: boolean; onChanged: () => void; showThread?: boolean; embedded?: boolean;
 }) {
   const a = ACCENTS[p.author?.accent || "eye"];
   const [box, setBox] = useState<{ urls: string[]; index: number } | null>(null);
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quoteText, setQuoteText] = useState("");
-  const [editing, setEditing] = useState(false);
-  const [editText, setEditText] = useState(p.body);
   const hot = p.likes + p.reposts >= 4;
-
-  const isPlainRepost = !!p.repost_of && !p.is_quote;
-  const orig = p.original;
-  const shownAuthor = isPlainRepost ? orig?.author : p.author;
-  const shownAuthorId = isPlainRepost ? orig?.author_id : p.author_id;
-  const shownBody = isPlainRepost ? orig?.body : p.body;
-  const shownImages = (isPlainRepost ? orig?.image_urls : p.image_urls) || [];
 
   async function like() {
     if (!uid || !approved) return;
@@ -159,12 +151,6 @@ export function PostCard({
     onChanged();
   }
 
-  async function saveEdit() {
-    await supabase.from("posts").update({ body: editText.trim() }).eq("id", p.id);
-    setEditing(false);
-    onChanged();
-  }
-
   async function share() {
     const url = window.location.origin + "/threads/" + p.id;
     const text = (p.body || "A post from G100").slice(0, 100);
@@ -176,6 +162,8 @@ export function PostCard({
     await supabase.from("posts").delete().eq("id", p.id);
     onChanged();
   }
+
+  const orig = p.original;
 
   return (
     <>
@@ -190,52 +178,36 @@ export function PostCard({
       >
         {!embedded && <div className="absolute left-0 top-0 h-full w-1" style={{ background: a, opacity: hot ? 0.9 : 0.35 }} />}
 
-        {isPlainRepost && (
+        {p.repost_of && !p.is_quote && (
           <p className="mb-2 pl-1 text-xs text-neutral-400">{"\u21BB"} {p.author?.full_name || "Member"} reposted</p>
         )}
 
+        {/* header */}
         <div className="flex items-center gap-3">
-          <Avatar url={shownAuthor?.photo_url} name={shownAuthor?.full_name} accent={a} size={embedded ? 36 : 44} href={"/member/" + shownAuthorId} />
+          <Avatar url={(p.repost_of && !p.is_quote ? orig?.author : p.author)?.photo_url} name={(p.repost_of && !p.is_quote ? orig?.author : p.author)?.full_name} accent={a} size={embedded ? 36 : 44} href={"/member/" + (p.repost_of && !p.is_quote ? orig?.author_id : p.author_id)} />
           <div className="min-w-0 flex-1">
-            <Link href={"/member/" + shownAuthorId} className="truncate text-sm font-semibold hover:underline">
-              {shownAuthor?.full_name || "G100 Member"}
+            <Link href={"/member/" + (p.repost_of && !p.is_quote ? orig?.author_id : p.author_id)} className="truncate text-sm font-semibold hover:underline">
+              {(p.repost_of && !p.is_quote ? orig?.author : p.author)?.full_name || "G100 Member"}
             </Link>
             <p className="truncate text-xs text-neutral-400">
-              {shownAuthor?.role_title || "Visionary Leader"} {"\u00B7"} {timeAgo(p.created_at)}
+              {(p.repost_of && !p.is_quote ? orig?.author : p.author)?.role_title || "Visionary Leader"} {"\u00B7"} {timeAgo(p.created_at)}
             </p>
           </div>
           {p.author_id === uid && !embedded && (
-            <div className="flex gap-3">
-              {!isPlainRepost && (
-                <button onClick={() => setEditing((v) => !v)} className="text-xs text-neutral-500 transition hover:text-[var(--eye)]">
-                  {editing ? "Cancel" : "Edit"}
-                </button>
-              )}
-              <button onClick={del} className="text-xs text-neutral-500 transition hover:text-[var(--ember)]">Delete</button>
-            </div>
+            <button onClick={del} className="text-xs text-neutral-500 transition hover:text-[var(--ember)]">Delete</button>
           )}
         </div>
 
-        {editing && (
-          <div className="mt-3 flex gap-2">
-            <input
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-              className="flex-1 rounded-full border border-white/15 bg-black/30 px-4 py-2 text-sm text-[var(--bone)] outline-none focus:border-[var(--eye)]"
-            />
-            <button onClick={saveEdit} className="rounded-full px-4 py-2 text-xs font-semibold text-[var(--ink)]" style={{ background: a }}>Save</button>
-          </div>
-        )}
-
-        {!editing && shownBody && (
+        {/* body */}
+        {(p.repost_of && !p.is_quote ? orig?.body : p.body) && (
           <Link href={"/threads/" + p.id} className="mt-3 block whitespace-pre-wrap text-[0.95rem] leading-relaxed text-neutral-100">
-            {shownBody}
+            {p.repost_of && !p.is_quote ? orig?.body : p.body}
           </Link>
         )}
 
-        <PostImages urls={shownImages} onOpen={(i) => setBox({ urls: shownImages.filter(Boolean), index: i })} />
+        <PostImages urls={(p.repost_of && !p.is_quote ? orig?.image_urls : p.image_urls) || []} onOpen={(i) => setBox({ urls: ((p.repost_of && !p.is_quote ? orig?.image_urls : p.image_urls) || []).filter(Boolean), index: i })} />
 
+        {/* quoted original */}
         {p.is_quote && orig && (
           <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3">
             <div className="flex items-center gap-2">
@@ -244,7 +216,7 @@ export function PostCard({
               <span className="text-xs text-neutral-500">{timeAgo(orig.created_at)}</span>
             </div>
             {orig.body && <p className="mt-2 line-clamp-4 text-sm text-neutral-300">{orig.body}</p>}
-            {orig.image_urls && orig.image_urls[0] && (
+            {orig.image_urls?.[0] && (
               <div className="mt-2 overflow-hidden rounded-xl">
                 <img src={orig.image_urls[0]} alt="" className="max-h-64 w-full object-cover" loading="lazy" />
               </div>
@@ -252,6 +224,7 @@ export function PostCard({
           </div>
         )}
 
+        {/* actions */}
         {!embedded && (
           <div className="mt-4 flex items-center gap-6 text-sm">
             <Link href={"/threads/" + p.id} className="flex items-center gap-1.5 text-neutral-400 transition hover:text-[var(--bone)]">

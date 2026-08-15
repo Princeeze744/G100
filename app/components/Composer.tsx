@@ -46,7 +46,7 @@ export function Composer({ uid, me, onPosted }: { uid: string; me: any; onPosted
   return (
     <div className="mb-8 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex gap-3">
-        <Avatar url={me?.photo_url} name={me?.full_name} accent={accent} size={40} />
+        <Avatar url={me?.photo_url} name={me?.full_name} accent={accent} size={40} href={"/member/" + uid} />
         <div className="flex-1">
           <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What's on your mind?" className="min-h-[60px] w-full resize-none bg-transparent text-sm text-[var(--bone)] outline-none placeholder:text-neutral-500" />
           {previews.length > 0 && (
@@ -74,3 +74,4 @@ export function Composer({ uid, me, onPosted }: { uid: string; me: any; onPosted
     </div>
   );
 }
+
