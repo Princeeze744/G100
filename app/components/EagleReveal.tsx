@@ -74,17 +74,25 @@ export default function EagleReveal() {
   });
 
   // The glide: ink strokes trace the bird
-  const draw = useTransform(scrollYProgress, [0.04, 0.36], [0, 1]);
+  const draw = useTransform(scrollYProgress, [0.05, 0.5], [0, 1]);
   // The body arrives: fill breathes in
-  const fillOp = useTransform(scrollYProgress, [0.36, 0.5], [0, 1]);
-  const strokeOp = useTransform(scrollYProgress, [0.04, 0.09, 0.44, 0.52], [0, 1, 1, 0]);
+  const fillOp = useTransform(scrollYProgress, [0.5, 0.68], [0, 1]);
+  const strokeOp = useTransform(
+    scrollYProgress,
+    [0.05, 0.1, 0.6, 0.7],
+    [0, 1, 1, 0]
+  );
   // The detonation: the eye ignites
-  const eyeGlow = useTransform(scrollYProgress, [0.54, 0.64], [0, 1]);
+  const eyeGlow = useTransform(scrollYProgress, [0.74, 0.86], [0, 1]);
 
   // Copy - the story in two lines
-  const line1Op = useTransform(scrollYProgress, [0.08, 0.15, 0.3, 0.38], [0, 1, 1, 0]);
-  const line2Op = useTransform(scrollYProgress, [0.52, 0.62], [0, 1]);
-  const line2Y = useTransform(scrollYProgress, [0.52, 0.62], [20, 0]);
+  const line1Op = useTransform(
+    scrollYProgress,
+    [0.12, 0.2, 0.42, 0.5],
+    [0, 1, 1, 0]
+  );
+  const line2Op = useTransform(scrollYProgress, [0.72, 0.84], [0, 1]);
+  const line2Y = useTransform(scrollYProgress, [0.72, 0.84], [20, 0]);
 
   // Reduced-motion cut: same beat, no travel (Law IX)
   if (reduced) {
@@ -103,7 +111,7 @@ export default function EagleReveal() {
   }
 
   return (
-    <div ref={ref} className="relative h-[240vh]" id="reveal">
+    <div ref={ref} className="relative h-[300vh]" id="reveal">
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden px-6">
         <div className="relative w-[88vw] max-w-2xl">
           <EagleSvg
@@ -138,7 +146,6 @@ export default function EagleReveal() {
     </div>
   );
 }
-
 
 
 

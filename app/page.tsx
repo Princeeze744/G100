@@ -102,9 +102,9 @@ export default function Home() {
 
       <Origin />
 
-      <LazyMount minH="240vh"><EagleReveal /></LazyMount>
+      <LazyMount minH="300vh"><EagleReveal /></LazyMount>
 
-      <LazyMount minH="180vh"><Formation /></LazyMount>
+      <LazyMount minH="220vh"><Formation /></LazyMount>
 
       <Section id="members" kicker="The Family" title="The 100">
         <p className="mb-12 max-w-2xl text-neutral-400">
@@ -146,7 +146,6 @@ export default function Home() {
     </>
   );
 }
-
 
 
 
