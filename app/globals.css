@@ -17,7 +17,7 @@ html {
 }
 
 @media (max-width: 639px) {
-  main { padding-top: 3.5rem; }
+  main:not([data-nopad]) { padding-top: 3.5rem; }
 }
 
 body {
@@ -98,3 +98,4 @@ video {
 
 /* snappier page transitions */
 main { will-change: auto; }
+

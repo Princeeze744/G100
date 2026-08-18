@@ -57,6 +57,7 @@ export default function Home() {
       <Atmosphere />
 
       <main
+        data-nopad
         id="home"
         className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden px-6"
       >
@@ -146,6 +147,7 @@ export default function Home() {
     </>
   );
 }
+
 
 
 
