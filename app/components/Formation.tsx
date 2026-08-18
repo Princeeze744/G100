@@ -29,21 +29,21 @@ function Dot({
   const [sx, sy] = scatter;
   const [cw, ch] = size;
 
-  const start = 0.04 + stagger * 0.16;
+  const start = 0.02 + stagger * 0.12;
   const x = useTransform(
     progress,
-    [start, 0.5],
+    [start, 0.34],
     [((sx - tx) / 100) * cw, 0]
   );
   const y = useTransform(
     progress,
-    [start, 0.5],
+    [start, 0.34],
     [((sy - ty) / 100) * ch, 0]
   );
   const opacity = useTransform(progress, [0.02, 0.12], [0, 1]);
   const scale = useTransform(
     progress,
-    [0.5, 0.62],
+    [0.34, 0.44],
     [1, isEye ? 1.9 : 1]
   );
 
@@ -95,11 +95,11 @@ export default function Formation() {
 
   const line1Op = useTransform(
     scrollYProgress,
-    [0.05, 0.12, 0.32, 0.4],
+    [0.03, 0.08, 0.2, 0.26],
     [0, 1, 1, 0]
   );
-  const line2Op = useTransform(scrollYProgress, [0.5, 0.6], [0, 1]);
-  const line2Y = useTransform(scrollYProgress, [0.5, 0.6], [16, 0]);
+  const line2Op = useTransform(scrollYProgress, [0.34, 0.42], [0, 1]);
+  const line2Y = useTransform(scrollYProgress, [0.34, 0.42], [16, 0]);
 
   if (reduced) {
     return (
@@ -166,6 +166,7 @@ export default function Formation() {
     </div>
   );
 }
+
 
 
 
