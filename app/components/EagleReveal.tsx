@@ -111,7 +111,7 @@ export default function EagleReveal() {
   }
 
   return (
-    <div ref={ref} className="relative h-[200vh]" id="reveal">
+    <div ref={ref} className="relative h-[280vh]" id="reveal">
       <div className="sticky top-0 flex h-[100dvh] flex-col items-center justify-center overflow-hidden px-6">
         <div className="relative w-[88vw] max-w-2xl">
           <EagleSvg
@@ -146,6 +146,7 @@ export default function EagleReveal() {
     </div>
   );
 }
+
 
 
 
