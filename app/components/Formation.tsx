@@ -127,7 +127,7 @@ export default function Formation() {
   }
 
   return (
-    <div ref={ref} className="relative h-[230vh]">
+    <div ref={ref} className="relative h-[150vh]">
       <div className="sticky top-0 flex h-[100dvh] flex-col items-center justify-center overflow-hidden px-6">
         <div
           ref={boxRef}
@@ -166,6 +166,7 @@ export default function Formation() {
     </div>
   );
 }
+
 
 
 
